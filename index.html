@@ -433,6 +433,8 @@
     { id: "transport", code: "M-04", title: "Transport & tournées", desc: "Bientôt disponible.", ready: false }
   ];
 
+  const GROUPES = ["1L1", "1L2", "2BGATL1", "2BGATL2", "TCAPOL2"];
+
   const OBJETS = [
     { key: "exercice", label: "Question sur un exercice", mode: "ai" },
     { key: "technique", label: "Problème technique (site)", mode: "canned" },
@@ -443,9 +445,11 @@
 
   /* ============ STATE ============ */
   const state = {
-    view: "loading",       // loading | setup | login | menu | admin | module
+    view: "loading",       // loading | setup | login | menu | admin | groupe-select | module
     users: [],
     currentUser: null,
+    activeGroupe: null,
+    pendingModule: null,
     activeModule: null,
     activeTable: "produits",
     editingRowId: null,
@@ -456,6 +460,7 @@
     loginError: "",
     setupError: "",
     adminError: "",
+    adminGroupeFilter: "",
     storageErrorReason: null
   };
 
@@ -476,45 +481,56 @@
     return firebase.database().ref(`${DB_ROOT}/${path}`);
   }
 
-  async function fbGetAll(path){
-    const snap = await dbRef(path).get();
+  function dbRefGroupe(path){
+    return firebase.database().ref(`${DB_ROOT}/groupes/${state.activeGroupe}/${path}`);
+  }
+
+  async function fbGetAll(ref){
+    const snap = await ref.get();
     const val = snap.val();
     return val ? Object.values(val) : [];
   }
 
-  async function fbSetAll(path, items){
+  async function fbSetAll(ref, items){
     const obj = {};
     items.forEach(item => { obj[item.id] = item; });
-    await dbRef(path).set(obj);
+    await ref.set(obj);
   }
 
   async function loadUsers(){
-    try{ state.users = await fbGetAll("users"); }
+    try{ state.users = await fbGetAll(dbRef("users")); }
     catch(e){ state.users = []; throw e; }
   }
   async function saveUsers(){
-    try{ await fbSetAll("users", state.users); }
+    try{ await fbSetAll(dbRef("users"), state.users); }
     catch(e){ showToast("Échec de l'enregistrement des comptes."); }
   }
   async function loadModuleTable(key){
-    try{ state.moduleData[key] = await fbGetAll(key); }
+    try{ state.moduleData[key] = await fbGetAll(dbRefGroupe(key)); }
     catch(e){ state.moduleData[key] = []; }
   }
   async function loadAllModuleTables(){
     for(const key of Object.keys(TABLES)) await loadModuleTable(key);
   }
   async function saveModuleTable(key){
-    try{ await fbSetAll(key, state.moduleData[key]); }
+    try{ await fbSetAll(dbRefGroupe(key), state.moduleData[key]); }
     catch(e){ showToast("Échec de l'enregistrement."); }
   }
 
   async function loadMessages(){
-    try{ state.messages = await fbGetAll("messages"); }
+    try{ state.messages = await fbGetAll(dbRefGroupe("messages")); }
     catch(e){ state.messages = []; }
   }
   async function saveMessages(){
-    try{ await fbSetAll("messages", state.messages); }
+    try{ await fbSetAll(dbRefGroupe("messages"), state.messages); }
     catch(e){ showToast("Échec de l'envoi du message."); }
+  }
+
+  async function getUnreadFromEleveInGroupe(groupe){
+    try{
+      const msgs = await fbGetAll(dbRef(`groupes/${groupe}/messages`));
+      return msgs.some(m => m.from === "eleve" && !m.readByTeacher);
+    }catch(e){ return false; }
   }
 
   /* Session : simple mémoire du navigateur (hors bac à sable Claude, localStorage fonctionne normalement ici) */
@@ -568,6 +584,7 @@
       return;
     }
     state.currentUser = user;
+    state.activeGroupe = user.role === "eleve" ? (user.groupe || null) : null;
     state.loginError = "";
     await saveSession(user.matricule);
     state.view = "menu";
@@ -576,6 +593,7 @@
 
   async function handleLogout(){
     state.currentUser = null;
+    state.activeGroupe = null;
     await clearSession();
     state.view = "login";
     render();
@@ -616,6 +634,7 @@
           <div class="session-chip">
             <span class="badge-role ${state.currentUser.role === 'eleve' ? 'eleve' : ''}">${state.currentUser.role === 'enseignant' ? 'ENSEIGNANT' : 'ÉLÈVE'}</span>
             <span>${state.currentUser.nom} (${state.currentUser.matricule})</span>
+            ${state.activeGroupe ? `<span class="badge-role" style="background:var(--orange);">GROUPE ${state.activeGroupe}</span>` : ""}
             <button class="logout-link" id="logoutBtn">Se déconnecter</button>
           </div>
         </header>
@@ -626,6 +645,7 @@
       const content = document.getElementById("content");
       if(state.view === "menu") renderMenu(content);
       else if(state.view === "admin") renderAdmin(content);
+      else if(state.view === "groupe-select") renderGroupeSelect(content);
       else if(state.view === "module") renderModule(content);
     }
   }
@@ -712,20 +732,26 @@
   }
 
   /* ============ RENDER : MENU ============ */
-  function hasUnreadMessages(){
+  async function computeUnreadForMenu(){
     if(state.currentUser.role === "enseignant"){
-      return state.messages.some(m => m.from === "eleve" && !m.readByTeacher);
+      for(const g of GROUPES){
+        if(await getUnreadFromEleveInGroupe(g)) return true;
+      }
+      return false;
     }
+    if(!state.currentUser.groupe) return false;
+    state.activeGroupe = state.currentUser.groupe;
+    await loadMessages();
     return state.messages.some(m => m.matricule === state.currentUser.matricule && m.from !== "eleve" && !m.readByStudent);
   }
 
   async function renderMenu(content){
     content.innerHTML = `<div class="loading-row">Chargement…</div>`;
-    await loadMessages();
-    const unread = hasUnreadMessages();
+    const unread = await computeUnreadForMenu();
+    const noGroupe = state.currentUser.role === "eleve" && !state.currentUser.groupe;
 
     const tiles = MODULES.map(m => `
-      <button class="module-tile ${m.ready ? "" : "disabled"}" data-module="${m.id}" ${m.ready ? "" : "disabled"}>
+      <button class="module-tile ${m.ready && !noGroupe ? "" : "disabled"}" data-module="${m.id}" ${m.ready && !noGroupe ? "" : "disabled"}>
         ${m.id === "messagerie" && unread ? `<span class="tile-badge" title="Nouveau message"></span>` : ""}
         <span class="code">${m.code}</span>
         <div class="title">${m.title}</div>
@@ -746,6 +772,7 @@
         <h1>Bonjour ${state.currentUser.nom.split(" ")[0] || state.currentUser.nom}</h1>
         <p>Choisissez un module pour vous entraîner sur les problématiques logistiques de la classe.</p>
       </div>
+      ${noGroupe ? `<div class="error-box" style="margin-bottom:18px;">Votre compte n'est pas encore rattaché à un groupe. Contactez votre enseignant.</div>` : ""}
       <div class="module-grid">${adminTile}${tiles}</div>
       <footer class="site-footer">Lycée professionnel Gaston Darboux — 7 rue Jules Raimu, Nîmes · Bac Pro Métiers de la Logistique</footer>
     `;
@@ -755,34 +782,84 @@
     }
     content.querySelectorAll(".module-tile[data-module]").forEach(btn => {
       btn.addEventListener("click", async () => {
-        state.activeModule = btn.dataset.module;
-        if(state.activeModule === "magasin"){
-          await loadAllModuleTables();
-          state.activeTable = "produits";
-          state.editingRowId = null;
+        const moduleId = btn.dataset.module;
+        if(state.currentUser.role === "enseignant"){
+          state.pendingModule = moduleId;
+          state.view = "groupe-select";
+          render();
+          return;
         }
-        if(state.activeModule === "messagerie"){
-          await loadMessages();
-          if(state.currentUser.role === "enseignant"){
-            await loadModuleTable("produits");
-            await loadModuleTable("clients");
-          }
-          state.activeThreadMatricule = state.currentUser.role === "eleve" ? state.currentUser.matricule : null;
+        if(!state.activeGroupe){
+          showToast("Votre compte n'est pas encore rattaché à un groupe.");
+          return;
         }
-        state.view = "module";
-        render();
+        await enterModule(moduleId);
+      });
+    });
+  }
+
+  async function enterModule(moduleId){
+    state.activeModule = moduleId;
+    if(moduleId === "magasin"){
+      await loadAllModuleTables();
+      state.activeTable = "produits";
+      state.editingRowId = null;
+    }
+    if(moduleId === "messagerie"){
+      await loadMessages();
+      if(state.currentUser.role === "enseignant"){
+        await loadModuleTable("produits");
+        await loadModuleTable("clients");
+      }
+      state.activeThreadMatricule = state.currentUser.role === "eleve" ? state.currentUser.matricule : null;
+    }
+    state.view = "module";
+    render();
+  }
+
+  /* ============ RENDER : GROUPE SELECT (enseignant) ============ */
+  function renderGroupeSelect(content){
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      <div class="menu-intro">
+        <h1>Choisir un groupe</h1>
+        <p>Chaque groupe a sa propre base de données et sa propre messagerie.</p>
+      </div>
+      <div class="module-grid">
+        ${GROUPES.map(g => `
+          <button class="module-tile" data-groupe="${g}">
+            <span class="code">GROUPE</span>
+            <div class="title">${g}</div>
+          </button>
+        `).join("")}
+      </div>
+    `;
+    document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    content.querySelectorAll("[data-groupe]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        state.activeGroupe = btn.dataset.groupe;
+        await enterModule(state.pendingModule);
       });
     });
   }
 
   /* ============ RENDER : ADMIN ============ */
   function renderAdmin(content){
+    const filteredUsers = state.users.filter(u => {
+      if(!state.adminGroupeFilter) return true;
+      if(state.adminGroupeFilter === "__none__") return u.role === "eleve" && !u.groupe;
+      return u.groupe === state.adminGroupeFilter;
+    });
+
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
       <div class="panel">
-        <h2>Importer la liste de classe</h2>
-        <p class="hint" style="margin-bottom:12px;">Ajoute les ${SEED_STUDENTS.length} élèves (matricules 1L01 à 1L26) avec des initiales anonymisées comme nom affiché, et le matricule comme mot de passe initial. Les comptes déjà existants ne sont pas modifiés.</p>
-        <button class="btn btn-primary" id="importBtn" style="margin-top:0;">Importer les élèves manquants</button>
+        <h2>Importer une liste de classe (CSV)</h2>
+        <p class="hint" style="margin-bottom:12px;">Fichier avec les colonnes Élèves (nom complet), Matricule, Mot de passe (même format que l'export de vie scolaire). Les noms sont automatiquement anonymisés en initiales. Les matricules déjà existants sont ignorés.</p>
+        <label for="rosterGroupe">Groupe concerné</label>
+        <select id="rosterGroupe">${GROUPES.map(g => `<option value="${g}">${g}</option>`).join("")}</select>
+        <input type="file" id="rosterCsvInput" accept=".csv" style="display:none" />
+        <button class="btn btn-primary" id="rosterImportBtn" style="margin-top:12px;">Choisir un fichier CSV à importer</button>
       </div>
       <div class="panel" style="margin-top:18px;">
         <h2>Ajouter un compte</h2>
@@ -796,21 +873,40 @@
               <option value="enseignant">Enseignant</option>
             </select>
           </div>
+          <div><label for="newGroupe">Groupe</label>
+            <select id="newGroupe">
+              <option value="">— Aucun —</option>
+              ${GROUPES.map(g => `<option value="${g}">${g}</option>`).join("")}
+            </select>
+          </div>
         </div>
         ${state.adminError ? `<div class="error-box">${state.adminError}</div>` : ""}
         <button class="btn btn-primary" id="addUserBtn" style="margin-top:0;">Créer le compte</button>
       </div>
       <div class="panel" style="margin-top:18px;">
-        <div class="table-head-row"><span class="table-title">Comptes existants (${state.users.length})</span></div>
+        <div class="table-head-row">
+          <span class="table-title">Comptes existants (${filteredUsers.length}/${state.users.length})</span>
+          <select id="groupeFilter">
+            <option value="">Tous les groupes</option>
+            ${GROUPES.map(g => `<option value="${g}" ${state.adminGroupeFilter === g ? "selected" : ""}>${g}</option>`).join("")}
+            <option value="__none__" ${state.adminGroupeFilter === "__none__" ? "selected" : ""}>Non assigné</option>
+          </select>
+        </div>
         <table>
-          <thead><tr><th>Matricule</th><th>Nom</th><th>Rôle</th><th>Mot de passe</th><th></th></tr></thead>
+          <thead><tr><th>Matricule</th><th>Nom</th><th>Rôle</th><th>Groupe</th><th>Mot de passe</th><th></th></tr></thead>
           <tbody>
-            ${state.users.map(u => `
+            ${filteredUsers.map(u => `
               <tr>
                 <td><span class="ref-tag">${u.matricule}</span></td>
-                <td>${u.nom}</td>
+                <td><input type="text" class="nom-input" data-id="${u.id}" value="${u.nom}" style="width:100px;" /></td>
                 <td><span class="role-pill ${u.role === 'eleve' ? 'eleve' : ''}">${u.role === 'enseignant' ? 'Enseignant' : 'Élève'}</span></td>
-                <td><input type="text" class="pwd-input" data-id="${u.id}" value="${u.password}" style="width:130px; font-family:var(--mono); font-size:12px;" /></td>
+                <td>${u.role === 'eleve' ? `
+                  <select class="groupe-select" data-id="${u.id}" style="${!u.groupe ? 'border-color:var(--danger);' : ''}">
+                    <option value="">— Non assigné —</option>
+                    ${GROUPES.map(g => `<option value="${g}" ${u.groupe === g ? "selected" : ""}>${g}</option>`).join("")}
+                  </select>
+                ` : `<span class="hint">Tous groupes</span>`}</td>
+                <td><input type="text" class="pwd-input" data-id="${u.id}" value="${u.password}" style="width:110px; font-family:var(--mono); font-size:12px;" /></td>
                 <td><button class="btn-danger" data-del="${u.id}">Retirer</button></td>
               </tr>
             `).join("")}
@@ -821,21 +917,20 @@
 
     document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
 
-    document.getElementById("importBtn").addEventListener("click", async () => {
-      let added = 0;
-      SEED_STUDENTS.forEach(s => {
-        if(!findUser(s.matricule)){
-          state.users.push({ id: uid(), matricule: s.matricule, nom: s.nom, password: s.matricule, role: "eleve" });
-          added++;
-        }
-      });
-      if(added > 0){
-        await saveUsers();
-        showToast(`${added} compte(s) élève ajouté(s).`);
-        render();
-      } else {
-        showToast("Tous les élèves de la liste existent déjà.");
-      }
+    document.getElementById("groupeFilter").addEventListener("change", (e) => {
+      state.adminGroupeFilter = e.target.value;
+      render();
+    });
+
+    document.getElementById("rosterImportBtn").addEventListener("click", () => {
+      document.getElementById("rosterCsvInput").click();
+    });
+    document.getElementById("rosterCsvInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const groupe = document.getElementById("rosterGroupe").value;
+      await handleRosterCsvImport(file, groupe);
+      e.target.value = "";
     });
 
     document.getElementById("addUserBtn").addEventListener("click", async () => {
@@ -843,19 +938,43 @@
       const nom = document.getElementById("newNom").value.trim();
       const password = document.getElementById("newPassword").value.trim();
       const role = document.getElementById("newRole").value;
+      const groupe = document.getElementById("newGroupe").value || null;
       state.adminError = "";
       if(!matricule || !nom || !password){
         state.adminError = "Tous les champs sont obligatoires.";
+        render(); return;
+      }
+      if(role === "eleve" && !groupe){
+        state.adminError = "Le groupe est obligatoire pour un compte élève.";
         render(); return;
       }
       if(findUser(matricule)){
         state.adminError = "Ce matricule existe déjà.";
         render(); return;
       }
-      state.users.push({ id: uid(), matricule, nom, password, role });
+      state.users.push({ id: uid(), matricule, nom, password, role, groupe: role === "eleve" ? groupe : null });
       await saveUsers();
       showToast(`Compte ${matricule} créé.`);
       render();
+    });
+
+    content.querySelectorAll(".nom-input").forEach(inp => {
+      inp.addEventListener("change", async () => {
+        const u = state.users.find(x => x.id === inp.dataset.id);
+        if(u && inp.value.trim()){ u.nom = inp.value.trim(); await saveUsers(); showToast(`Nom de ${u.matricule} mis à jour.`); }
+      });
+    });
+
+    content.querySelectorAll(".groupe-select").forEach(sel => {
+      sel.addEventListener("change", async () => {
+        const u = state.users.find(x => x.id === sel.dataset.id);
+        if(u){
+          u.groupe = sel.value || null;
+          await saveUsers();
+          showToast(`Groupe de ${u.matricule} : ${u.groupe || "non assigné"}.`);
+          render();
+        }
+      });
     });
 
     content.querySelectorAll(".pwd-input").forEach(inp => {
@@ -943,6 +1062,7 @@
 
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      ${state.currentUser.role === "enseignant" ? `<button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>` : ""}
       <nav class="aisles">${navHTML}</nav>
       <main class="board">
         <section class="panel">
@@ -968,6 +1088,14 @@
     `;
 
     document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    const changeGroupeBtnMagasin = document.getElementById("changeGroupeBtn");
+    if(changeGroupeBtnMagasin){
+      changeGroupeBtnMagasin.addEventListener("click", () => {
+        state.pendingModule = "magasin";
+        state.view = "groupe-select";
+        render();
+      });
+    }
 
     document.getElementById("exportCsvBtn").addEventListener("click", () => {
       const headers = [...t.fields.map(f => f.label), "Saisi par"];
@@ -1070,6 +1198,21 @@
     });
   }
 
+  function computeInitials(fullName){
+    const words = fullName.trim().split(/\s+/).filter(Boolean);
+    if(words.length === 0) return "?.?.";
+    let i = 0;
+    while(i < words.length - 1 && words[i] === words[i].toUpperCase() && /[A-ZÀ-Ÿ]/.test(words[i])){
+      i++;
+    }
+    if(i === 0) i = 1;
+    const surname = words.slice(0, i).join(" ");
+    const firstname = words.slice(i).join(" ") || words[words.length - 1];
+    const firstInitial = (firstname.trim()[0] || "?").toUpperCase();
+    const surnameInitial = (surname.trim()[0] || "?").toUpperCase();
+    return `${firstInitial}.${surnameInitial}.`;
+  }
+
   function parseCSV(text){
     const rows = [];
     let i = 0, field = "", row = [], inQuotes = false;
@@ -1128,6 +1271,38 @@
     }
     if(added > 0) await saveModuleTable(state.activeTable);
     showToast(`${added} ligne(s) importée(s)${skipped ? `, ${skipped} ignorée(s)` : ""}.`);
+    render();
+  }
+
+  async function handleRosterCsvImport(file, groupe){
+    const rawText = await file.text();
+    const text = rawText.replace(/^\uFEFF/, "");
+    const rows = parseCSV(text).filter(r => r.some(c => c.trim() !== ""));
+    if(rows.length < 2){
+      showToast("Fichier CSV vide ou illisible.");
+      return;
+    }
+    const header = rows[0].map(h => h.trim().toLowerCase());
+    const idxEleve = header.findIndex(h => h.includes("élève") || h.includes("eleve"));
+    const idxMatricule = header.findIndex(h => h.includes("matricule"));
+    const idxMotDePasse = header.findIndex(h => h.includes("mot de passe") || h.includes("password"));
+    if(idxMatricule === -1){
+      showToast("Colonne « Matricule » introuvable dans le fichier.");
+      return;
+    }
+    let added = 0, skipped = 0;
+    for(let r = 1; r < rows.length; r++){
+      const cells = rows[r];
+      const matricule = (cells[idxMatricule] || "").trim().toUpperCase();
+      if(!matricule || findUser(matricule)){ if(matricule) skipped++; continue; }
+      const fullName = idxEleve !== -1 ? (cells[idxEleve] || "").trim() : "";
+      const nom = fullName ? computeInitials(fullName) : matricule;
+      const password = (idxMotDePasse !== -1 && (cells[idxMotDePasse] || "").trim()) ? cells[idxMotDePasse].trim() : matricule;
+      state.users.push({ id: uid(), matricule, nom, password, role: "eleve", groupe });
+      added++;
+    }
+    if(added > 0) await saveUsers();
+    showToast(`${added} élève(s) importé(s) dans ${groupe}${skipped ? `, ${skipped} déjà existant(s) ignoré(s)` : ""}.`);
     render();
   }
 
@@ -1263,7 +1438,7 @@
   }
 
   function renderMessagerieEnseignant(content){
-    const students = state.users.filter(u => u.role === "eleve");
+    const students = state.users.filter(u => u.role === "eleve" && u.groupe === state.activeGroupe);
     const listHTML = students.map(s => {
       const thread = threadFor(s.matricule);
       const last = thread[thread.length - 1];
@@ -1282,6 +1457,7 @@
 
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      <button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>
       <div class="panel" style="margin-bottom:16px;">
         <h2>Générer une commande client</h2>
         ${state.moduleData.clients.length === 0 ? `
@@ -1333,6 +1509,11 @@
     `;
 
     document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    document.getElementById("changeGroupeBtn").addEventListener("click", () => {
+      state.pendingModule = "messagerie";
+      state.view = "groupe-select";
+      render();
+    });
 
     if(state.moduleData.clients.length > 0 && state.moduleData.produits.length > 0){
       const linesHost = document.getElementById("orderLines");
@@ -1485,6 +1666,7 @@
       const user = findUser(sessionMatricule);
       if(user){
         state.currentUser = user;
+        state.activeGroupe = user.role === "eleve" ? (user.groupe || null) : null;
         state.view = "menu";
         render();
         return;
