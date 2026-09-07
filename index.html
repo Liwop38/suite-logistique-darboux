@@ -286,13 +286,25 @@
   }
   .msg-row{ display:flex; }
   .msg-row.eleve{ justify-content:flex-end; }
-  .msg-row.enseignant, .msg-row.bot{ justify-content:flex-start; }
+  .msg-row.enseignant, .msg-row.bot, .msg-row.client{ justify-content:flex-start; }
   .msg-bubble{
     max-width: 78%; padding: 8px 12px; border-radius: var(--radius);
     background: #f0eee7; border: 1px solid var(--line);
   }
   .msg-row.eleve .msg-bubble{ background: #fff2ea; border-color: #f0c9ac; }
   .msg-row.bot .msg-bubble{ background: #eef3f4; border-color: #cddadd; }
+  .msg-row.client .msg-bubble{ background: #fdf6e3; border-color: #e8d18a; }
+
+  .order-line{
+    display:flex; gap:8px; align-items:center; margin-bottom:8px;
+  }
+  .order-line select{ flex:1 1 auto; }
+  .order-line input{ width:70px; flex:0 0 70px; }
+  .order-line-remove{
+    background:none; border:1px solid var(--line); color: var(--ink-soft); cursor:pointer;
+    padding: 8px 10px; border-radius: var(--radius); flex:0 0 auto;
+  }
+  .order-line-remove:hover{ color: var(--danger); border-color: var(--danger); }
   .msg-meta{ font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.03em; display:flex; align-items:center; gap:6px; }
   .msg-del{
     margin-left:auto; background:none; border:none; color: var(--ink-soft); cursor:pointer;
@@ -374,6 +386,14 @@
         { key: "emplacement_code", label: "Emplacement", type: "linked-select", linkedTable: "emplacements", linkedDisplay: r => `${r.code_emplacement} (${r.zone})`, linkedValue: r => r.code_emplacement, required: true },
         { key: "quantite", label: "Quantité", type: "number", required: true, placeholder: "ex : 48" }
       ]
+    },
+    clients: {
+      code: "A-05", label: "Clients", singular: "un client",
+      fields: [
+        { key: "nom", label: "Nom du client", type: "text", required: true, placeholder: "ex : Menuiserie Provençale" },
+        { key: "contact", label: "Contact (tél / email)", type: "text", placeholder: "ex : contact@menuiserie-provencale.fr" },
+        { key: "adresse", label: "Adresse de livraison", type: "text", placeholder: "ex : 12 rue des Oliviers, 30000 Nîmes" }
+      ]
     }
   };
 
@@ -429,7 +449,7 @@
     activeModule: null,
     activeTable: "produits",
     editingRowId: null,
-    moduleData: { produits: [], emplacements: [], fournisseurs: [], stock: [] },
+    moduleData: { produits: [], emplacements: [], fournisseurs: [], stock: [], clients: [] },
     messages: [],
     activeThreadMatricule: null,
     botTyping: false,
@@ -743,6 +763,10 @@
         }
         if(state.activeModule === "messagerie"){
           await loadMessages();
+          if(state.currentUser.role === "enseignant"){
+            await loadModuleTable("produits");
+            await loadModuleTable("clients");
+          }
           state.activeThreadMatricule = state.currentUser.role === "eleve" ? state.currentUser.matricule : null;
         }
         state.view = "module";
@@ -1120,7 +1144,7 @@
   }
 
   function bubbleHTML(m){
-    const roleLabel = m.from === "enseignant" ? "Enseignant" : (m.from === "bot" ? "Assistant" : m.authorNom);
+    const roleLabel = m.from === "enseignant" ? "Enseignant" : (m.from === "bot" ? "Assistant" : (m.from === "client" ? `${m.authorNom} (Client)` : m.authorNom));
     return `
       <div class="msg-row ${m.from}">
         <div class="msg-bubble">
@@ -1259,6 +1283,30 @@
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
       <div class="panel" style="margin-bottom:16px;">
+        <h2>Générer une commande client</h2>
+        ${state.moduleData.clients.length === 0 ? `
+          <div class="empty-state">Ajoutez au moins un client dans le module Base du magasin (table Clients) avant de générer une commande.</div>
+        ` : state.moduleData.produits.length === 0 ? `
+          <div class="empty-state">Ajoutez au moins un produit dans le module Base du magasin avant de générer une commande.</div>
+        ` : `
+          <label for="orderClient">Client (expéditeur)</label>
+          <select id="orderClient">${state.moduleData.clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join("")}</select>
+
+          <label style="margin-top:14px;">Produits commandés</label>
+          <div id="orderLines"></div>
+          <button class="btn-ghost" id="addOrderLineBtn" style="margin-top:8px;">+ Ajouter un produit</button>
+
+          <label for="orderRecipient" style="margin-top:14px;">Destinataire</label>
+          <select id="orderRecipient">
+            <option value="__all__">Toute la classe</option>
+            ${students.map(s => `<option value="${s.matricule}">${s.nom} (${s.matricule})</option>`).join("")}
+          </select>
+
+          <div id="orderError"></div>
+          <button class="btn btn-primary" id="generateOrderBtn" style="width:auto;">Générer et envoyer la commande</button>
+        `}
+      </div>
+      <div class="panel" style="margin-bottom:16px;">
         <h2>Message à toute la classe</h2>
         <div class="compose-box" style="border-top:none; padding-top:0;">
           <label for="broadcastBody">Message envoyé à chaque élève</label>
@@ -1285,6 +1333,65 @@
     `;
 
     document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+
+    if(state.moduleData.clients.length > 0 && state.moduleData.produits.length > 0){
+      const linesHost = document.getElementById("orderLines");
+      let lineCount = 0;
+
+      function addOrderLine(){
+        lineCount++;
+        const row = document.createElement("div");
+        row.className = "order-line";
+        row.dataset.lineId = lineCount;
+        row.innerHTML = `
+          <select class="order-line-produit">${state.moduleData.produits.map(p => `<option value="${p.reference}">${p.reference} — ${p.designation}</option>`).join("")}</select>
+          <input class="order-line-qte" type="number" min="1" value="1" placeholder="Qté" />
+          <button type="button" class="order-line-remove" title="Retirer cette ligne">✕</button>
+        `;
+        row.querySelector(".order-line-remove").addEventListener("click", () => {
+          if(linesHost.children.length > 1){ row.remove(); }
+          else { showToast("Il faut au moins une ligne de produit."); }
+        });
+        linesHost.appendChild(row);
+      }
+      addOrderLine();
+
+      document.getElementById("addOrderLineBtn").addEventListener("click", addOrderLine);
+
+      document.getElementById("generateOrderBtn").addEventListener("click", async () => {
+        const errorBox = document.getElementById("orderError");
+        errorBox.innerHTML = "";
+        const client = state.moduleData.clients.find(c => c.id === document.getElementById("orderClient").value);
+        const lineRows = [...linesHost.querySelectorAll(".order-line")];
+        const lines = lineRows.map(row => {
+          const ref = row.querySelector(".order-line-produit").value;
+          const qte = parseInt(row.querySelector(".order-line-qte").value, 10);
+          const produit = state.moduleData.produits.find(p => p.reference === ref);
+          return { ref, qte, designation: produit ? produit.designation : ref };
+        });
+        if(lines.some(l => !l.qte || l.qte < 1)){
+          errorBox.innerHTML = `<div class="error-box">Chaque ligne doit avoir une quantité d'au moins 1.</div>`;
+          return;
+        }
+        const recipientValue = document.getElementById("orderRecipient").value;
+        const recipients = recipientValue === "__all__" ? students.map(s => s.matricule) : [recipientValue];
+
+        const linesText = lines.map(l => `- ${l.ref} x ${l.qte} — ${l.designation}`).join("\n");
+        const body = `Bonjour,\n\nMerci de bien vouloir préparer la commande suivante :\n\n${linesText}\n\n${client.adresse ? `Adresse de livraison : ${client.adresse}\n` : ""}Merci de nous confirmer la prise en charge.\n\nCordialement,\n${client.nom}${client.contact ? `\n${client.contact}` : ""}`;
+
+        const ts = Date.now();
+        recipients.forEach(matricule => {
+          state.messages.push({
+            id: uid(), matricule, from: "client", authorNom: client.nom,
+            objetLabel: "Commande client", body, timestamp: ts,
+            readByStudent: false, readByTeacher: true
+          });
+        });
+        await saveMessages();
+        showToast(`Commande envoyée à ${recipients.length} élève(s).`);
+        renderMessagerieEnseignant(content);
+      });
+    }
 
     document.getElementById("broadcastBtn").addEventListener("click", async () => {
       const body = document.getElementById("broadcastBody").value.trim();
