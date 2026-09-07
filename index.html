@@ -277,7 +277,12 @@
   }
   .msg-row.eleve .msg-bubble{ background: #fff2ea; border-color: #f0c9ac; }
   .msg-row.bot .msg-bubble{ background: #eef3f4; border-color: #cddadd; }
-  .msg-meta{ font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.03em; }
+  .msg-meta{ font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.03em; display:flex; align-items:center; gap:6px; }
+  .msg-del{
+    margin-left:auto; background:none; border:none; color: var(--ink-soft); cursor:pointer;
+    font-size: 12px; line-height:1; padding: 0 2px;
+  }
+  .msg-del:hover{ color: var(--danger); }
   .msg-body{ font-size: 13.5px; line-height:1.45; white-space: pre-wrap; }
   .msg-time{ font-family: var(--mono); font-size: 10px; color: var(--ink-soft); margin-top: 5px; text-align:right; }
 
@@ -956,18 +961,39 @@
       .sort((a,b) => a.timestamp - b.timestamp);
   }
 
+  function canDeleteMessage(m){
+    if(state.currentUser.role === "enseignant") return true;
+    return m.from === "eleve" && m.matricule === state.currentUser.matricule;
+  }
+
   function bubbleHTML(m){
-    const mine = m.from === "eleve";
     const roleLabel = m.from === "enseignant" ? "Enseignant" : (m.from === "bot" ? "Assistant" : m.authorNom);
     return `
       <div class="msg-row ${m.from}">
         <div class="msg-bubble">
-          <div class="msg-meta">${roleLabel}${m.objetLabel ? ` · ${m.objetLabel}` : ""}</div>
+          <div class="msg-meta">${roleLabel}${m.objetLabel ? ` · ${m.objetLabel}` : ""}${canDeleteMessage(m) ? ` <button class="msg-del" data-id="${m.id}" title="Supprimer">✕</button>` : ""}</div>
           <div class="msg-body">${(m.body || "").replace(/</g,"&lt;")}</div>
           <div class="msg-time">${new Date(m.timestamp).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })}</div>
         </div>
       </div>
     `;
+  }
+
+  async function deleteMessage(id, content, rerender){
+    if(!confirm("Supprimer ce message ?")) return;
+    state.messages = state.messages.filter(m => m.id !== id);
+    await saveMessages();
+    showToast("Message supprimé.");
+    rerender(content);
+  }
+
+  function wireBubbleDeletes(content, rerender){
+    content.querySelectorAll(".msg-del").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteMessage(btn.dataset.id, content, rerender);
+      });
+    });
   }
 
   function composeHTML({ showObjet }){
@@ -1022,6 +1048,7 @@
     document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
     const scrollBox = document.getElementById("threadScroll");
     scrollBox.scrollTop = scrollBox.scrollHeight;
+    wireBubbleDeletes(content, renderMessagerieEleve);
 
     document.getElementById("sendBtn").addEventListener("click", async () => {
       const objetKey = document.getElementById("msgObjet").value;
@@ -1141,6 +1168,7 @@
       const scrollBox = document.getElementById("threadScroll");
       if(scrollBox) scrollBox.scrollTop = scrollBox.scrollHeight;
       markThreadRead(activeStudent.matricule, "enseignant");
+      wireBubbleDeletes(content, renderMessagerieEnseignant);
 
       document.getElementById("sendBtn").addEventListener("click", async () => {
         const body = document.getElementById("msgBody").value.trim();
