@@ -227,6 +227,11 @@
     padding: 4px 8px; border-radius: var(--radius); cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;
   }
   .del-btn:hover{ background: var(--danger); color: #fff; border-color: var(--danger); }
+  .edit-btn{
+    background: none; border: 1px solid var(--line); color: var(--steel); font-size: 11px;
+    padding: 4px 8px; border-radius: var(--radius); cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .edit-btn:hover{ background: var(--steel); color: #fff; border-color: var(--steel); }
   .empty-state{
     padding: 34px 12px; text-align:center; color: var(--ink-soft); font-size: 14px;
     border: 1px dashed var(--line); border-radius: var(--radius);
@@ -423,6 +428,7 @@
     currentUser: null,
     activeModule: null,
     activeTable: "produits",
+    editingRowId: null,
     moduleData: { produits: [], emplacements: [], fournisseurs: [], stock: [] },
     messages: [],
     activeThreadMatricule: null,
@@ -733,6 +739,7 @@
         if(state.activeModule === "magasin"){
           await loadAllModuleTables();
           state.activeTable = "produits";
+          state.editingRowId = null;
         }
         if(state.activeModule === "messagerie"){
           await loadMessages();
@@ -861,16 +868,17 @@
     return state.currentUser.role === "enseignant" || row.createdBy === state.currentUser.matricule;
   }
 
-  function fieldInputHTML(field){
+  function fieldInputHTML(field, value){
+    const v = value !== undefined && value !== null ? value : "";
     if(field.type === "select"){
-      return `<select id="f_${field.key}"><option value="">— Choisir —</option>${field.options.map(o => `<option value="${o}">${o}</option>`).join("")}</select>`;
+      return `<select id="f_${field.key}"><option value="">— Choisir —</option>${field.options.map(o => `<option value="${o}" ${o === v ? "selected" : ""}>${o}</option>`).join("")}</select>`;
     }
     if(field.type === "linked-select"){
       const rows = state.moduleData[field.linkedTable];
       if(rows.length === 0) return `<select id="f_${field.key}" disabled><option>Aucun élément dans ${TABLES[field.linkedTable].label}</option></select>`;
-      return `<select id="f_${field.key}"><option value="">— Choisir —</option>${rows.map(r => `<option value="${field.linkedValue(r)}">${field.linkedDisplay(r)}</option>`).join("")}</select>`;
+      return `<select id="f_${field.key}"><option value="">— Choisir —</option>${rows.map(r => `<option value="${field.linkedValue(r)}" ${field.linkedValue(r) === v ? "selected" : ""}>${field.linkedDisplay(r)}</option>`).join("")}</select>`;
     }
-    return `<input id="f_${field.key}" type="${field.type}" data-mono="${!!field.code}" placeholder="${field.placeholder || ""}" />`;
+    return `<input id="f_${field.key}" type="${field.type}" data-mono="${!!field.code}" placeholder="${field.placeholder || ""}" value="${(v+"").replace(/"/g,"&quot;")}" />`;
   }
 
   function displayValue(row, field){
@@ -883,6 +891,7 @@
 
   function renderModuleMagasin(content){
     const t = TABLES[state.activeTable];
+    const editingRow = state.editingRowId ? state.moduleData[state.activeTable].find(r => r.id === state.editingRowId) : null;
 
     const navHTML = Object.entries(TABLES).map(([key, tbl]) => `
       <button class="aisle-btn ${state.activeTable === key ? "active" : ""}" data-table="${key}">
@@ -895,7 +904,7 @@
     const rows = state.moduleData[state.activeTable];
     let tableHTML;
     if(rows.length === 0){
-      tableHTML = `<div class="empty-state"><strong>Table vide</strong>Ajoutez ${t.singular} avec le formulaire à gauche.</div>`;
+      tableHTML = `<div class="empty-state"><strong>Table vide</strong>Ajoutez ${t.singular} avec le formulaire à gauche, ou importez un fichier CSV.</div>`;
     } else {
       tableHTML = `<table><thead><tr>${t.fields.map(f => `<th>${f.label}</th>`).join("")}<th>Saisi par</th><th></th></tr></thead><tbody>`;
       rows.forEach(row => {
@@ -903,7 +912,7 @@
           const isCode = f.code || f.type === "linked-select";
           const val = displayValue(row, f);
           return `<td>${isCode ? `<span class="ref-tag">${val}</span>` : val}</td>`;
-        }).join("")}<td>${row.createdByNom || "—"}</td><td>${canDelete(row) ? `<button class="del-btn" data-id="${row.id}">Suppr.</button>` : ""}</td></tr>`;
+        }).join("")}<td>${row.createdByNom || "—"}</td><td style="white-space:nowrap;">${canDelete(row) ? `<button class="edit-btn" data-id="${row.id}">Modifier</button> <button class="del-btn" data-id="${row.id}">Suppr.</button>` : ""}</td></tr>`;
       });
       tableHTML += `</tbody></table>`;
     }
@@ -913,36 +922,82 @@
       <nav class="aisles">${navHTML}</nav>
       <main class="board">
         <section class="panel">
-          <h2>Ajouter ${t.singular}</h2>
+          <h2>${editingRow ? `Modifier ${t.singular}` : `Ajouter ${t.singular}`}</h2>
           <div id="fieldsHost"></div>
           <div id="formError"></div>
-          <button class="btn btn-primary" id="addBtn">Ajouter à ${t.label.toLowerCase()}</button>
+          <button class="btn btn-primary" id="addBtn">${editingRow ? "Enregistrer les modifications" : `Ajouter à ${t.label.toLowerCase()}`}</button>
+          ${editingRow ? `<button class="btn-ghost" id="cancelEditBtn" style="width:100%; margin-top:8px;">Annuler la modification</button>` : ""}
         </section>
         <section class="panel">
-          <div class="table-head-row"><span class="table-title">${t.code} · ${t.label} (${rows.length})</span></div>
+          <div class="table-head-row">
+            <span class="table-title">${t.code} · ${t.label} (${rows.length})</span>
+            <div style="display:flex; gap:8px;">
+              <input type="file" id="csvImportInput" accept=".csv" style="display:none" />
+              <button class="btn-ghost" id="importCsvBtn">Importer un CSV</button>
+              <button class="btn-ghost" id="exportCsvBtn">Exporter en CSV</button>
+            </div>
+          </div>
           ${tableHTML}
         </section>
       </main>
-      <div class="info-box" style="margin-top:18px;">Données partagées avec toute la classe. Vous pouvez supprimer vos propres entrées ; l'enseignant peut supprimer n'importe quelle entrée.</div>
+      <div class="info-box" style="margin-top:18px;">Données partagées avec toute la classe. Vous pouvez modifier ou supprimer vos propres entrées ; l'enseignant peut tout modifier ou supprimer. Pour l'import CSV : utilisez un fichier avec les mêmes en-têtes de colonnes que l'export (pour Stock, les colonnes Produit/Emplacement attendent la référence/le code brut, pas le libellé complet).</div>
     `;
 
     document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
 
+    document.getElementById("exportCsvBtn").addEventListener("click", () => {
+      const headers = [...t.fields.map(f => f.label), "Saisi par"];
+      const csvRows = [headers.join(";")];
+      rows.forEach(row => {
+        const values = t.fields.map(f => `"${(displayValue(row, f) + "").replace(/<[^>]+>/g,"").replace(/"/g,'""')}"`);
+        values.push(`"${(row.createdByNom || "").replace(/"/g,'""')}"`);
+        csvRows.push(values.join(";"));
+      });
+      const csv = "\uFEFF" + csvRows.join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${state.activeTable}-magasin-darboux.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("importCsvBtn").addEventListener("click", () => {
+      document.getElementById("csvImportInput").click();
+    });
+
+    document.getElementById("csvImportInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      await handleCsvImport(file, t);
+      e.target.value = "";
+    });
+
     const host = document.getElementById("fieldsHost");
     t.fields.forEach(f => {
       const wrap = document.createElement("div");
-      wrap.innerHTML = `<label for="f_${f.key}">${f.label}${f.required ? " *" : ""}</label>${fieldInputHTML(f)}`;
+      wrap.innerHTML = `<label for="f_${f.key}">${f.label}${f.required ? " *" : ""}</label>${fieldInputHTML(f, editingRow ? editingRow[f.key] : undefined)}`;
       host.appendChild(wrap);
     });
 
     content.querySelectorAll(".aisle-btn").forEach(btn => {
-      btn.addEventListener("click", () => { state.activeTable = btn.dataset.table; render(); });
+      btn.addEventListener("click", () => { state.activeTable = btn.dataset.table; state.editingRowId = null; render(); });
     });
+
+    if(editingRow){
+      document.getElementById("cancelEditBtn").addEventListener("click", () => {
+        state.editingRowId = null;
+        render();
+      });
+    }
 
     document.getElementById("addBtn").addEventListener("click", async () => {
       const errorBox = document.getElementById("formError");
       errorBox.innerHTML = "";
-      const entry = { id: uid(), createdBy: state.currentUser.matricule, createdByNom: state.currentUser.nom };
+      const entry = editingRow
+        ? { ...editingRow }
+        : { id: uid(), createdBy: state.currentUser.matricule, createdByNom: state.currentUser.nom };
       for(const f of t.fields){
         const el = document.getElementById(`f_${f.key}`);
         let val = el.value.trim ? el.value.trim() : el.value;
@@ -955,26 +1010,101 @@
       }
       const keyField = t.fields.find(f => f.code);
       if(keyField){
-        const dup = state.moduleData[state.activeTable].some(r => r[keyField.key] === entry[keyField.key]);
+        const dup = state.moduleData[state.activeTable].some(r => r[keyField.key] === entry[keyField.key] && r.id !== entry.id);
         if(dup){
           errorBox.innerHTML = `<div class="error-box">Cette référence existe déjà dans ${t.label.toLowerCase()}.</div>`;
           return;
         }
       }
-      state.moduleData[state.activeTable].push(entry);
+      if(editingRow){
+        const idx = state.moduleData[state.activeTable].findIndex(r => r.id === entry.id);
+        state.moduleData[state.activeTable][idx] = entry;
+        state.editingRowId = null;
+      } else {
+        state.moduleData[state.activeTable].push(entry);
+      }
       await saveModuleTable(state.activeTable);
-      showToast(`Entrée ajoutée à ${t.label}.`);
+      showToast(editingRow ? "Modifications enregistrées." : `Entrée ajoutée à ${t.label}.`);
       render();
+    });
+
+    content.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.editingRowId = btn.dataset.id;
+        render();
+      });
     });
 
     content.querySelectorAll(".del-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
+        if(state.editingRowId === btn.dataset.id) state.editingRowId = null;
         state.moduleData[state.activeTable] = state.moduleData[state.activeTable].filter(r => r.id !== btn.dataset.id);
         await saveModuleTable(state.activeTable);
         showToast("Entrée supprimée.");
         render();
       });
     });
+  }
+
+  function parseCSV(text){
+    const rows = [];
+    let i = 0, field = "", row = [], inQuotes = false;
+    const len = text.length;
+    while(i < len){
+      const c = text[i];
+      if(inQuotes){
+        if(c === '"'){
+          if(text[i+1] === '"'){ field += '"'; i += 2; continue; }
+          inQuotes = false; i++; continue;
+        }
+        field += c; i++; continue;
+      }
+      if(c === '"'){ inQuotes = true; i++; continue; }
+      if(c === ";"){ row.push(field); field = ""; i++; continue; }
+      if(c === "\r"){ i++; continue; }
+      if(c === "\n"){ row.push(field); rows.push(row); row = []; field = ""; i++; continue; }
+      field += c; i++;
+    }
+    if(field.length > 0 || row.length > 0){ row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  async function handleCsvImport(file, t){
+    const rawText = await file.text();
+    const text = rawText.replace(/^\uFEFF/, "");
+    const rows = parseCSV(text).filter(r => r.some(c => c.trim() !== ""));
+    if(rows.length < 2){
+      showToast("Fichier CSV vide ou illisible.");
+      return;
+    }
+    const headerRow = rows[0].map(h => h.trim().toLowerCase());
+    const fieldIndexes = t.fields.map(f => headerRow.indexOf(f.label.toLowerCase()));
+    if(fieldIndexes.some(idx => idx === -1)){
+      showToast(`Colonnes attendues pour ${t.label} : ${t.fields.map(f => f.label).join(", ")}.`);
+      return;
+    }
+    const keyField = t.fields.find(f => f.code);
+    let added = 0, skipped = 0;
+    for(let r = 1; r < rows.length; r++){
+      const cells = rows[r];
+      const entry = { id: uid(), createdBy: state.currentUser.matricule, createdByNom: state.currentUser.nom };
+      let invalid = false;
+      t.fields.forEach((f, idx) => {
+        let val = (cells[fieldIndexes[idx]] || "").trim();
+        if(f.code) val = val.toUpperCase();
+        if(f.required && !val) invalid = true;
+        entry[f.key] = val;
+      });
+      if(invalid){ skipped++; continue; }
+      if(keyField && state.moduleData[state.activeTable].some(row => row[keyField.key] === entry[keyField.key])){
+        skipped++; continue;
+      }
+      state.moduleData[state.activeTable].push(entry);
+      added++;
+    }
+    if(added > 0) await saveModuleTable(state.activeTable);
+    showToast(`${added} ligne(s) importée(s)${skipped ? `, ${skipped} ignorée(s)` : ""}.`);
+    render();
   }
 
   /* ============ RENDER : MODULE MESSAGERIE ============ */
