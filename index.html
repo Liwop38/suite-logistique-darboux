@@ -1072,6 +1072,7 @@
     const scrollBox = document.getElementById("threadScroll");
     scrollBox.scrollTop = scrollBox.scrollHeight;
     wireBubbleDeletes(content, renderMessagerieEleve);
+    await markThreadRead(matricule, "eleve");
 
     document.getElementById("sendBtn").addEventListener("click", async () => {
       const objetKey = document.getElementById("msgObjet").value;
