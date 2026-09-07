@@ -855,7 +855,7 @@
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
       <div class="panel">
         <h2>Importer une liste de classe (CSV)</h2>
-        <p class="hint" style="margin-bottom:12px;">Fichier avec les colonnes Élèves (nom complet), Matricule, Mot de passe (même format que l'export de vie scolaire). Les noms sont automatiquement anonymisés en initiales. Les matricules déjà existants sont ignorés.</p>
+        <p class="hint" style="margin-bottom:12px;">Fichier avec les colonnes Élèves (nom complet), Matricule, Mot de passe (même format que l'export de vie scolaire). Le nom affiché est généré automatiquement au format « Prénom N. » (ex : Kelvin A.). Les matricules déjà existants sont ignorés.</p>
         <label for="rosterGroupe">Groupe concerné</label>
         <select id="rosterGroupe">${GROUPES.map(g => `<option value="${g}">${g}</option>`).join("")}</select>
         <input type="file" id="rosterCsvInput" accept=".csv" style="display:none" />
@@ -1200,7 +1200,7 @@
 
   function computeInitials(fullName){
     const words = fullName.trim().split(/\s+/).filter(Boolean);
-    if(words.length === 0) return "?.?.";
+    if(words.length === 0) return "?";
     let i = 0;
     while(i < words.length - 1 && words[i] === words[i].toUpperCase() && /[A-ZÀ-Ÿ]/.test(words[i])){
       i++;
@@ -1208,9 +1208,10 @@
     if(i === 0) i = 1;
     const surname = words.slice(0, i).join(" ");
     const firstname = words.slice(i).join(" ") || words[words.length - 1];
-    const firstInitial = (firstname.trim()[0] || "?").toUpperCase();
+    const firstNameWord = firstname.trim().split(/\s+/)[0] || "?";
+    const properFirstName = firstNameWord.charAt(0).toUpperCase() + firstNameWord.slice(1).toLowerCase();
     const surnameInitial = (surname.trim()[0] || "?").toUpperCase();
-    return `${firstInitial}.${surnameInitial}.`;
+    return `${properFirstName} ${surnameInitial}.`;
   }
 
   function parseCSV(text){
