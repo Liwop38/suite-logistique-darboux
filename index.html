@@ -161,6 +161,7 @@
     gap: 14px;
   }
   .module-tile{
+    position: relative;
     text-align:left;
     background: var(--panel);
     border: 1px solid var(--line);
@@ -168,6 +169,16 @@
     padding: 16px;
     cursor: pointer;
     font-family: var(--sans);
+  }
+  .tile-badge{
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 0 2px var(--panel);
   }
   .module-tile:hover{ border-left-color: var(--orange); }
   .module-tile.disabled{ cursor: default; opacity: 0.55; }
@@ -675,9 +686,21 @@
   }
 
   /* ============ RENDER : MENU ============ */
-  function renderMenu(content){
+  function hasUnreadMessages(){
+    if(state.currentUser.role === "enseignant"){
+      return state.messages.some(m => m.from === "eleve" && !m.readByTeacher);
+    }
+    return state.messages.some(m => m.matricule === state.currentUser.matricule && m.from !== "eleve" && !m.readByStudent);
+  }
+
+  async function renderMenu(content){
+    content.innerHTML = `<div class="loading-row">Chargement…</div>`;
+    await loadMessages();
+    const unread = hasUnreadMessages();
+
     const tiles = MODULES.map(m => `
       <button class="module-tile ${m.ready ? "" : "disabled"}" data-module="${m.id}" ${m.ready ? "" : "disabled"}>
+        ${m.id === "messagerie" && unread ? `<span class="tile-badge" title="Nouveau message"></span>` : ""}
         <span class="code">${m.code}</span>
         <div class="title">${m.title}</div>
         <div class="desc">${m.desc}</div>
