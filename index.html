@@ -20,6 +20,7 @@
     --steel: #33505d;
     --steel-light: #6e8894;
     --danger: #b23a2f;
+    --green: #2f7a3d;
     --radius: 3px;
     --mono: "IBM Plex Mono", "Courier New", monospace;
     --sans: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
@@ -280,20 +281,56 @@
   .thread-preview{ flex-basis:100%; font-size:11.5px; color: var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .unread-dot{ width:8px; height:8px; border-radius:50%; background: var(--orange); display:inline-block; }
 
-  .thread-scroll{
-    max-height: 360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;
-    padding: 4px 2px 14px; margin-bottom: 12px;
+  .thread-scroll{ display:none; } /* obsolète, conservé pour compat, non utilisé */
+
+  .mail-panel{ padding: 0; overflow: hidden; }
+  .mail-toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 18px; border-bottom: 1px solid var(--line); background: #fafaf8;
   }
-  .msg-row{ display:flex; }
-  .msg-row.eleve{ justify-content:flex-end; }
-  .msg-row.enseignant, .msg-row.bot, .msg-row.client{ justify-content:flex-start; }
-  .msg-bubble{
-    max-width: 78%; padding: 8px 12px; border-radius: var(--radius);
-    background: #f0eee7; border: 1px solid var(--line);
+  .mail-toolbar h2{ font-size: 15px; margin:0; border:none; padding:0; text-transform:none; letter-spacing:0; color: var(--ink); font-weight:700; }
+  #mailBody{ padding: 0; }
+
+  .mail-list{ display:flex; flex-direction:column; }
+  .mail-row{
+    display:grid;
+    grid-template-columns: 16px 130px 1fr auto;
+    align-items:center; gap: 12px;
+    width:100%; text-align:left; background: var(--panel); border:none; border-bottom: 1px solid var(--line);
+    padding: 12px 18px; cursor:pointer; font-family: var(--sans); font-size: 13.5px; color: var(--ink);
   }
-  .msg-row.eleve .msg-bubble{ background: #fff2ea; border-color: #f0c9ac; }
-  .msg-row.bot .msg-bubble{ background: #eef3f4; border-color: #cddadd; }
-  .msg-row.client .msg-bubble{ background: #fdf6e3; border-color: #e8d18a; }
+  .mail-row:hover{ background: #faf8f4; }
+  .mail-row.unread{ background: #fffaf5; }
+  .mail-row.unread .mail-sender, .mail-row.unread .mail-subject{ font-weight: 700; }
+  .mail-dot{ color: var(--orange); font-size: 10px; text-align:center; }
+  .mail-sender{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; }
+  .mail-subject-line{ overflow:hidden; white-space:nowrap; text-overflow:ellipsis; min-width:0; }
+  .mail-subject{ color: var(--ink); }
+  .mail-snippet{ color: var(--ink-soft); }
+  .mail-subject-line .mail-snippet::before{ content:" — "; }
+  .mail-date{ font-family: var(--mono); font-size: 11px; color: var(--ink-soft); white-space:nowrap; }
+  @media (max-width: 640px){
+    .mail-row{ grid-template-columns: 14px 1fr auto; }
+    .mail-row .mail-subject-line{ grid-column: 2 / 3; }
+    .mail-row .mail-sender{ display:none; }
+  }
+
+  .mail-empty{ padding: 46px 20px; text-align:center; color: var(--ink-soft); font-size: 14px; }
+  .mail-empty strong{ display:block; color: var(--ink); margin-bottom: 4px; font-size: 15px; }
+
+  .mail-detail{ padding: 18px; }
+  .mail-detail-header{ border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 14px; }
+  .mail-detail-subject{ font-family: var(--display); font-size: 19px; margin-bottom: 6px; }
+  .mail-detail-meta{ font-size: 12.5px; color: var(--ink-soft); }
+  .mail-detail-badge{
+    font-family: var(--mono); font-size: 10px; text-transform:uppercase; letter-spacing:0.04em;
+    padding: 2px 7px; border-radius: var(--radius); background: var(--steel); color:#fff; margin-left: 6px;
+  }
+  .mail-detail-badge.client{ background: #a8801a; }
+  .mail-detail-badge.bot{ background: var(--steel-light); }
+  .mail-detail-body{ font-size: 14.5px; line-height:1.6; white-space: pre-wrap; margin-bottom: 22px; }
+  .mail-detail-actions{ display:flex; gap:10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .mail-back{ padding: 14px 18px 0; }
 
   .order-line{
     display:flex; gap:8px; align-items:center; margin-bottom:8px;
@@ -305,20 +342,70 @@
     padding: 8px 10px; border-radius: var(--radius); flex:0 0 auto;
   }
   .order-line-remove:hover{ color: var(--danger); border-color: var(--danger); }
-  .msg-meta{ font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.03em; display:flex; align-items:center; gap:6px; }
-  .msg-del{
-    margin-left:auto; background:none; border:none; color: var(--ink-soft); cursor:pointer;
-    font-size: 12px; line-height:1; padding: 0 2px;
-  }
-  .msg-del:hover{ color: var(--danger); }
-  .msg-body{ font-size: 13.5px; line-height:1.45; white-space: pre-wrap; }
-  .msg-time{ font-family: var(--mono); font-size: 10px; color: var(--ink-soft); margin-top: 5px; text-align:right; }
 
+  .recipient-box{
+    border: 1px solid var(--line); border-radius: var(--radius); background:#fdfcfa;
+    max-height: 220px; overflow-y:auto; padding: 4px 0;
+  }
+  .recipient-item{
+    display:flex; align-items:center; gap:8px; padding: 7px 12px; font-size: 13.5px; cursor:pointer;
+  }
+  .recipient-item:hover{ background: #f5f3ee; }
+  .recipient-item input[type="checkbox"]{ width:15px; height:15px; flex:0 0 auto; }
+  .recipient-all{ font-family: var(--sans); }
+  .recipient-divider{ height:1px; background: var(--line); margin: 2px 0; }
+
+  .image-preview{ margin-top: 8px; }
+  .image-preview img{ max-width: 120px; max-height: 120px; border-radius: var(--radius); border: 1px solid var(--line); display:block; margin-bottom: 6px; }
+  .image-remove{ background:none; border:1px solid var(--line); color: var(--danger); font-size: 11px; padding: 4px 8px; border-radius: var(--radius); cursor:pointer; }
+  .image-remove:hover{ background: var(--danger); color:#fff; }
+  .table-thumb{ width: 42px; height: 42px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--line); display:block; }
+
+  .bon-header{ display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:14px; border-bottom:1px solid var(--line); margin-bottom:14px; }
+  .bon-client{ padding: 12px 14px; background:#faf8f4; border:1px solid var(--line); border-radius: var(--radius); font-size:14px; line-height:1.5; }
+
+  .doc-tabs{ display:flex; gap:8px; margin-top:16px; }
+  .doc-tab{
+    background: var(--panel); border:1px solid var(--line); border-bottom:none;
+    padding: 8px 16px; font-family: var(--sans); font-size:13px; font-weight:600; color: var(--ink-soft);
+    cursor:pointer; border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .doc-tab.active{ color: var(--ink); background:#fff9f4; border-color: var(--orange); border-bottom: 2px solid #fff9f4; margin-bottom:-1px; }
+  .doc-tab:disabled{ cursor:not-allowed; opacity:0.5; }
+
+  .livraison-parties{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+  @media (max-width: 640px){ .livraison-parties{ grid-template-columns: 1fr; } }
+
+  .signature-row{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:40px; }
+  .signature-box{
+    border-top:1px solid var(--ink); padding-top:8px; font-size:12px; color: var(--ink-soft);
+    height: 60px;
+  }
+
+  .livraison-help-grid{ display:grid; grid-template-columns: 1fr 280px; gap:20px; align-items:start; }
+  @media (max-width: 760px){ .livraison-help-grid{ grid-template-columns: 1fr; } }
+  .help-box{
+    background: #eef3f4; border: 1px solid #cddadd; border-radius: var(--radius);
+    padding: 14px; font-size: 12.5px; line-height: 1.55; color: var(--ink);
+  }
+  .help-box-title{ font-weight: 700; margin-bottom: 8px; font-size: 13px; color: var(--steel); }
+  .help-box ul{ margin: 0; padding-left: 18px; }
+  .help-box li{ margin-bottom: 8px; }
+  .help-box li:last-child{ margin-bottom: 0; }
+
+  @media print {
+    body *{ visibility: hidden; }
+    #printArea, #printArea *{ visibility: visible; }
+    #printArea{ position:absolute; top:0; left:0; width:100%; border:none; padding:0; }
+    .no-print{ display:none !important; }
+    .no-print-input{ color: transparent !important; background: #fff !important; }
+  }
+
+  .compose-box{ padding: 18px; }
   .compose-box textarea{
     width:100%; padding: 9px 10px; font-family: var(--sans); font-size: 14px;
     border: 1px solid var(--line); border-radius: var(--radius); background: #fdfcfa; color: var(--ink); resize: vertical;
   }
-  .compose-box{ border-top: 1px solid var(--line); padding-top: 14px; }
   @media (max-width: 720px){ .messagerie-board{ grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -359,7 +446,11 @@
         { key: "designation", label: "Désignation", type: "text", required: true, placeholder: "ex : Carton d'ampoules LED" },
         { key: "categorie", label: "Catégorie", type: "select", options: ["Alimentaire","Textile","Électronique","Outillage","Fournitures","Autre"] },
         { key: "unite", label: "Unité de gestion", type: "select", options: ["Unité","Colis","Palette"] },
-        { key: "pcb", label: "PCB (quantité par colis)", type: "number", placeholder: "ex : 12" }
+        { key: "pcb", label: "PCB (quantité par colis)", type: "number", placeholder: "ex : 12" },
+        { key: "longueur", label: "Longueur L (cm)", type: "number", placeholder: "ex : 30" },
+        { key: "largeur", label: "Largeur l (cm)", type: "number", placeholder: "ex : 20" },
+        { key: "hauteur", label: "Hauteur h (cm)", type: "number", placeholder: "ex : 15" },
+        { key: "image", label: "Image", type: "image" }
       ]
     },
     emplacements: {
@@ -376,7 +467,8 @@
       fields: [
         { key: "nom", label: "Nom du fournisseur", type: "text", required: true, placeholder: "ex : Distrilog SARL" },
         { key: "contact", label: "Contact (tél / email)", type: "text", placeholder: "ex : contact@distrilog.fr" },
-        { key: "delai", label: "Délai de livraison (jours)", type: "number", placeholder: "ex : 3" }
+        { key: "delai", label: "Délai de livraison (jours)", type: "number", placeholder: "ex : 3" },
+        { key: "adresse", label: "Adresse", type: "text", placeholder: "ex : 12 rue de l'Industrie, 30000 Nîmes" }
       ]
     },
     stock: {
@@ -429,8 +521,9 @@
   const MODULES = [
     { id: "magasin", code: "M-01", title: "Base du magasin pédagogique", desc: "Produits, emplacements, fournisseurs et stock.", ready: true },
     { id: "messagerie", code: "M-02", title: "Messagerie", desc: "Contactez votre enseignant, avec un premier retour automatique selon l'objet.", ready: true },
-    { id: "picking", code: "M-03", title: "Préparation de commandes", desc: "Bientôt disponible.", ready: false },
-    { id: "transport", code: "M-04", title: "Transport & tournées", desc: "Bientôt disponible.", ready: false }
+    { id: "picking", code: "M-03", title: "Préparation de commandes", desc: "Sélectionnez les produits, imprimez le bon, validez le prélèvement en stock.", ready: true },
+    { id: "reception", code: "M-04", title: "Réception de commande", desc: "Contrôlez une livraison, imprimez le bon de contrôle, mettez à jour le stock.", ready: true },
+    { id: "transport", code: "M-05", title: "Transport & tournées", desc: "Bientôt disponible.", ready: false }
   ];
 
   const GROUPES = ["1L1", "1L2", "2BGATL1", "2BGATL2", "TCAPOL2"];
@@ -456,6 +549,19 @@
     moduleData: { produits: [], emplacements: [], fournisseurs: [], stock: [], clients: [] },
     messages: [],
     activeThreadMatricule: null,
+    mailView: "list",       // list | detail | compose | reply
+    openMessageId: null,
+    commandes: [],
+    commandeView: "list",   // list | new | detail
+    activeCommandeId: null,
+    commandeDocView: "preparation", // preparation | livraison
+    receptions: [],
+    receptionView: "list",  // list | new | detail
+    activeReceptionId: null,
+    moduleCodes: {},
+    moduleCodesLoadedForGroupe: null,
+    codeLockError: "",
+    adminCodesGroupe: null,
     botTyping: false,
     loginError: "",
     setupError: "",
@@ -485,6 +591,10 @@
     return firebase.database().ref(`${DB_ROOT}/groupes/${state.activeGroupe}/${path}`);
   }
 
+  function dbRefGroupeExplicit(groupe, path){
+    return firebase.database().ref(`${DB_ROOT}/groupes/${groupe}/${path}`);
+  }
+
   async function fbGetAll(ref){
     const snap = await ref.get();
     const val = snap.val();
@@ -495,6 +605,38 @@
     const obj = {};
     items.forEach(item => { obj[item.id] = item; });
     await ref.set(obj);
+  }
+
+  // Écrit UN SEUL élément (ajout ou modification), sans toucher aux autres entrées de la table.
+  // C'est ce qui évite que deux élèves qui saisissent en même temps s'écrasent mutuellement.
+  async function fbPutItem(ref, item){
+    try{ await ref.child(item.id).set(item); return true; }
+    catch(e){ showToast("Échec de l'enregistrement."); return false; }
+  }
+
+  // Supprime UN SEUL élément par son id, sans toucher aux autres.
+  async function fbRemoveItem(ref, id){
+    try{ await ref.child(id).remove(); return true; }
+    catch(e){ showToast("Échec de la suppression."); return false; }
+  }
+
+  // Ajoute/fusionne PLUSIEURS éléments en une fois (import CSV), sans écraser les entrées existantes.
+  async function fbMergeItems(ref, items){
+    if(items.length === 0) return true;
+    try{
+      const updates = {};
+      items.forEach(it => { updates[it.id] = it; });
+      await ref.update(updates);
+      return true;
+    }catch(e){ showToast("Échec de l'enregistrement."); return false; }
+  }
+
+  // Met à jour uniquement certains champs de certains éléments (ex: marquer des messages comme lus)
+  // sans réécrire les objets entiers ni toucher aux autres entrées.
+  async function fbUpdatePaths(ref, pathUpdates){
+    if(Object.keys(pathUpdates).length === 0) return true;
+    try{ await ref.update(pathUpdates); return true; }
+    catch(e){ return false; }
   }
 
   async function loadUsers(){
@@ -531,6 +673,25 @@
       const msgs = await fbGetAll(dbRef(`groupes/${groupe}/messages`));
       return msgs.some(m => m.from === "eleve" && !m.readByTeacher);
     }catch(e){ return false; }
+  }
+
+  async function loadCommandes(){
+    try{ state.commandes = await fbGetAll(dbRefGroupe("commandes")); }
+    catch(e){ state.commandes = []; }
+  }
+
+  async function loadReceptions(){
+    try{ state.receptions = await fbGetAll(dbRefGroupe("receptions")); }
+    catch(e){ state.receptions = []; }
+  }
+
+  async function ensureModuleCodesLoaded(groupe){
+    if(state.moduleCodesLoadedForGroupe === groupe) return;
+    try{
+      const snap = await dbRefGroupeExplicit(groupe, "moduleCodes").get();
+      state.moduleCodes = snap.val() || {};
+    }catch(e){ state.moduleCodes = {}; }
+    state.moduleCodesLoadedForGroupe = groupe;
   }
 
   /* Session : simple mémoire du navigateur (hors bac à sable Claude, localStorage fonctionne normalement ici) */
@@ -607,7 +768,7 @@
     }
     const teacher = { id: uid(), matricule: matricule.toUpperCase(), nom, password, role: "enseignant" };
     state.users.push(teacher);
-    await saveUsers();
+    await fbPutItem(dbRef("users"), teacher);
     state.currentUser = teacher;
     await saveSession(teacher.matricule);
     state.view = "menu";
@@ -646,6 +807,7 @@
       if(state.view === "menu") renderMenu(content);
       else if(state.view === "admin") renderAdmin(content);
       else if(state.view === "groupe-select") renderGroupeSelect(content);
+      else if(state.view === "code-lock") renderCodeLock(content);
       else if(state.view === "module") renderModule(content);
     }
   }
@@ -793,6 +955,15 @@
           showToast("Votre compte n'est pas encore rattaché à un groupe.");
           return;
         }
+        await ensureModuleCodesLoaded(state.activeGroupe);
+        const requiredCode = state.moduleCodes[moduleId];
+        if(requiredCode && requiredCode.length === 4){
+          state.pendingModule = moduleId;
+          state.codeLockError = "";
+          state.view = "code-lock";
+          render();
+          return;
+        }
         await enterModule(moduleId);
       });
     });
@@ -812,9 +983,63 @@
         await loadModuleTable("clients");
       }
       state.activeThreadMatricule = state.currentUser.role === "eleve" ? state.currentUser.matricule : null;
+      state.mailView = "list";
+      state.openMessageId = null;
+    }
+    if(moduleId === "picking"){
+      await loadAllModuleTables();
+      await loadCommandes();
+      state.commandeView = "list";
+      state.activeCommandeId = null;
+    }
+    if(moduleId === "reception"){
+      await loadAllModuleTables();
+      await loadCommandes();
+      await loadReceptions();
+      state.receptionView = "list";
+      state.activeReceptionId = null;
     }
     state.view = "module";
     render();
+  }
+
+  /* ============ RENDER : CODE LOCK (accès module verrouillé) ============ */
+  function renderCodeLock(content){
+    const moduleInfo = MODULES.find(m => m.id === state.pendingModule);
+    content.innerHTML = `
+      <div class="center-stage" style="min-height:40vh;">
+        <div class="badge-card">
+          <div class="badge-icon">ACCÈS VERROUILLÉ</div>
+          <h1>${moduleInfo ? moduleInfo.title : "Module"}</h1>
+          <p class="sub">Ce module nécessite un code à 4 chiffres fourni par votre enseignant pour cette séance.</p>
+          <label for="lockCode">Code à 4 chiffres</label>
+          <input id="lockCode" type="text" maxlength="4" inputmode="numeric" pattern="[0-9]*" data-mono="true" style="text-align:center; font-size:22px; letter-spacing:8px;" />
+          ${state.codeLockError ? `<div class="error-box">${state.codeLockError}</div>` : ""}
+          <button class="btn btn-primary" id="lockSubmitBtn">Valider</button>
+          <button class="btn-ghost" id="lockCancelBtn" style="width:100%; margin-top:8px;">Retour au menu</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("lockCancelBtn").addEventListener("click", () => {
+      state.view = "menu";
+      state.pendingModule = null;
+      render();
+    });
+    const codeInput = document.getElementById("lockCode");
+    codeInput.focus();
+    const submit = async () => {
+      const val = codeInput.value.trim();
+      const expected = state.moduleCodes[state.pendingModule];
+      if(val && val === expected){
+        state.codeLockError = "";
+        await enterModule(state.pendingModule);
+      } else {
+        state.codeLockError = "Code incorrect.";
+        render();
+      }
+    };
+    document.getElementById("lockSubmitBtn").addEventListener("click", submit);
+    codeInput.addEventListener("keydown", (e) => { if(e.key === "Enter") submit(); });
   }
 
   /* ============ RENDER : GROUPE SELECT (enseignant) ============ */
@@ -845,15 +1070,24 @@
 
   /* ============ RENDER : ADMIN ============ */
   function renderAdmin(content){
+    if(!state.adminCodesGroupe) state.adminCodesGroupe = GROUPES[0];
     const filteredUsers = state.users.filter(u => {
       if(!state.adminGroupeFilter) return true;
       if(state.adminGroupeFilter === "__none__") return u.role === "eleve" && !u.groupe;
       return u.groupe === state.adminGroupeFilter;
     });
+    const codableModules = MODULES.filter(m => m.ready);
 
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
       <div class="panel">
+        <h2>Codes d'accès aux modules</h2>
+        <p class="hint" style="margin-bottom:12px;">Définissez un code à 4 chiffres par module, pour un groupe donné. Les élèves de ce groupe devront le saisir pour accéder au module — utile pour ne rendre disponible que le module utile à la séance en cours. Laissez un champ vide pour un accès libre.</p>
+        <label for="codesGroupeSelect">Groupe</label>
+        <select id="codesGroupeSelect">${GROUPES.map(g => `<option value="${g}" ${state.adminCodesGroupe === g ? "selected" : ""}>${g}</option>`).join("")}</select>
+        <div id="codesFields" style="margin-top:12px;"><div class="loading-row">Chargement…</div></div>
+      </div>
+      <div class="panel" style="margin-top:18px;">
         <h2>Importer une liste de classe (CSV)</h2>
         <p class="hint" style="margin-bottom:12px;">Fichier avec les colonnes Élèves (nom complet), Matricule, Mot de passe (même format que l'export de vie scolaire). Le nom affiché est généré automatiquement au format « Prénom N. » (ex : Kelvin A.). Les matricules déjà existants sont ignorés.</p>
         <label for="rosterGroupe">Groupe concerné</label>
@@ -917,6 +1151,57 @@
 
     document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
 
+    async function loadAndRenderCodes(){
+      const fieldsHost = document.getElementById("codesFields");
+      fieldsHost.innerHTML = `<div class="loading-row">Chargement…</div>`;
+      let codes = {};
+      try{
+        const snap = await dbRefGroupeExplicit(state.adminCodesGroupe, "moduleCodes").get();
+        codes = snap.val() || {};
+      }catch(e){ codes = {}; }
+
+      fieldsHost.innerHTML = `
+        <div class="admin-form-row">
+          ${codableModules.map(m => `
+            <div>
+              <label for="code_${m.id}">${m.code} — ${m.title}</label>
+              <input id="code_${m.id}" type="text" maxlength="4" inputmode="numeric" pattern="[0-9]*" data-mono="true"
+                     placeholder="Libre" value="${codes[m.id] || ""}" />
+            </div>
+          `).join("")}
+        </div>
+        <div id="codesError"></div>
+        <button class="btn btn-primary" id="saveCodesBtn" style="width:auto; margin-top:10px;">Enregistrer les codes pour ${state.adminCodesGroupe}</button>
+      `;
+
+      document.getElementById("saveCodesBtn").addEventListener("click", async () => {
+        const errorBox = document.getElementById("codesError");
+        errorBox.innerHTML = "";
+        const newCodes = {};
+        for(const m of codableModules){
+          const val = document.getElementById(`code_${m.id}`).value.trim();
+          if(val && !/^[0-9]{4}$/.test(val)){
+            errorBox.innerHTML = `<div class="error-box">Le code pour « ${m.title} » doit être vide ou contenir exactement 4 chiffres.</div>`;
+            return;
+          }
+          newCodes[m.id] = val;
+        }
+        try{
+          await dbRefGroupeExplicit(state.adminCodesGroupe, "moduleCodes").set(newCodes);
+          if(state.moduleCodesLoadedForGroupe === state.adminCodesGroupe) state.moduleCodes = newCodes;
+          showToast(`Codes enregistrés pour ${state.adminCodesGroupe}.`);
+        }catch(e){
+          showToast("Échec de l'enregistrement des codes.");
+        }
+      });
+    }
+
+    loadAndRenderCodes();
+    document.getElementById("codesGroupeSelect").addEventListener("change", (e) => {
+      state.adminCodesGroupe = e.target.value;
+      loadAndRenderCodes();
+    });
+
     document.getElementById("groupeFilter").addEventListener("change", (e) => {
       state.adminGroupeFilter = e.target.value;
       render();
@@ -948,12 +1233,15 @@
         state.adminError = "Le groupe est obligatoire pour un compte élève.";
         render(); return;
       }
+      // Recharge la liste avant de vérifier l'unicité du matricule (concurrence)
+      await loadUsers();
       if(findUser(matricule)){
         state.adminError = "Ce matricule existe déjà.";
         render(); return;
       }
-      state.users.push({ id: uid(), matricule, nom, password, role, groupe: role === "eleve" ? groupe : null });
-      await saveUsers();
+      const newUser = { id: uid(), matricule, nom, password, role, groupe: role === "eleve" ? groupe : null };
+      await fbPutItem(dbRef("users"), newUser);
+      state.users.push(newUser);
       showToast(`Compte ${matricule} créé.`);
       render();
     });
@@ -961,7 +1249,11 @@
     content.querySelectorAll(".nom-input").forEach(inp => {
       inp.addEventListener("change", async () => {
         const u = state.users.find(x => x.id === inp.dataset.id);
-        if(u && inp.value.trim()){ u.nom = inp.value.trim(); await saveUsers(); showToast(`Nom de ${u.matricule} mis à jour.`); }
+        if(u && inp.value.trim()){
+          u.nom = inp.value.trim();
+          await fbPutItem(dbRef("users"), u);
+          showToast(`Nom de ${u.matricule} mis à jour.`);
+        }
       });
     });
 
@@ -970,7 +1262,7 @@
         const u = state.users.find(x => x.id === sel.dataset.id);
         if(u){
           u.groupe = sel.value || null;
-          await saveUsers();
+          await fbPutItem(dbRef("users"), u);
           showToast(`Groupe de ${u.matricule} : ${u.groupe || "non assigné"}.`);
           render();
         }
@@ -980,7 +1272,11 @@
     content.querySelectorAll(".pwd-input").forEach(inp => {
       inp.addEventListener("change", async () => {
         const u = state.users.find(x => x.id === inp.dataset.id);
-        if(u){ u.password = inp.value; await saveUsers(); showToast(`Mot de passe de ${u.matricule} mis à jour.`); }
+        if(u){
+          u.password = inp.value;
+          await fbPutItem(dbRef("users"), u);
+          showToast(`Mot de passe de ${u.matricule} mis à jour.`);
+        }
       });
     });
 
@@ -992,8 +1288,9 @@
           return;
         }
         if(!confirm(`Retirer le compte ${target.matricule} (${target.nom}) ?`)) return;
+        const ok = await fbRemoveItem(dbRef("users"), target.id);
+        if(!ok) return;
         state.users = state.users.filter(u => u.id !== btn.dataset.del);
-        await saveUsers();
         showToast("Compte retiré.");
         render();
       });
@@ -1004,9 +1301,27 @@
   function renderModule(content){
     if(state.activeModule === "magasin") renderModuleMagasin(content);
     else if(state.activeModule === "messagerie") renderMessagerie(content);
+    else if(state.activeModule === "picking") renderModulePicking(content);
+    else if(state.activeModule === "reception") renderModuleReception(content);
   }
 
   /* ============ RENDER : MODULE MAGASIN ============ */
+  // Supprime automatiquement les lignes de Stock dont le produit ou l'emplacement référencé
+  // n'existe plus (après suppression d'un produit/emplacement, ou vidage de table).
+  async function reconcileStockOrphans(){
+    await loadModuleTable("produits");
+    await loadModuleTable("emplacements");
+    await loadModuleTable("stock");
+    const validRefs = new Set(state.moduleData.produits.map(p => p.reference));
+    const validEmpl = new Set(state.moduleData.emplacements.map(e => e.code_emplacement));
+    const orphanRows = state.moduleData.stock.filter(row => !validRefs.has(row.produit_ref) || !validEmpl.has(row.emplacement_code));
+    for(const row of orphanRows){
+      await fbRemoveItem(dbRefGroupe("stock"), row.id);
+    }
+    state.moduleData.stock = state.moduleData.stock.filter(row => validRefs.has(row.produit_ref) && validEmpl.has(row.emplacement_code));
+    return orphanRows.length;
+  }
+
   function canDelete(row){
     return state.currentUser.role === "enseignant" || row.createdBy === state.currentUser.matricule;
   }
@@ -1021,13 +1336,46 @@
       if(rows.length === 0) return `<select id="f_${field.key}" disabled><option>Aucun élément dans ${TABLES[field.linkedTable].label}</option></select>`;
       return `<select id="f_${field.key}"><option value="">— Choisir —</option>${rows.map(r => `<option value="${field.linkedValue(r)}" ${field.linkedValue(r) === v ? "selected" : ""}>${field.linkedDisplay(r)}</option>`).join("")}</select>`;
     }
+    if(field.type === "image"){
+      return `
+        <input id="f_${field.key}" type="file" accept="image/*" />
+        <div class="image-preview" id="preview_${field.key}">${v ? `<img src="${v}" /><button type="button" class="image-remove" id="remove_${field.key}">Retirer l'image</button>` : ""}</div>
+        <input type="hidden" id="f_${field.key}_current" value="${v ? v.replace(/"/g,"&quot;") : ""}" />
+      `;
+    }
     return `<input id="f_${field.key}" type="${field.type}" data-mono="${!!field.code}" placeholder="${field.placeholder || ""}" value="${(v+"").replace(/"/g,"&quot;")}" />`;
+  }
+
+  // Redimensionne et compresse une image côté navigateur avant stockage (garde la base légère).
+  function readAndCompressImage(file, maxDim = 320, quality = 0.72){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > height && width > maxDim){ height = Math.round(height * maxDim / width); width = maxDim; }
+          else if(height > maxDim){ width = Math.round(width * maxDim / height); height = maxDim; }
+          const canvas = document.createElement("canvas");
+          canvas.width = width; canvas.height = height;
+          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   function displayValue(row, field){
     if(field.type === "linked-select"){
       const linked = state.moduleData[field.linkedTable].find(r => field.linkedValue(r) === row[field.key]);
       return linked ? field.linkedDisplay(linked) : `<em>${row[field.key]} (introuvable)</em>`;
+    }
+    if(field.type === "image"){
+      return row[field.key] ? `<img src="${row[field.key]}" class="table-thumb" />` : "—";
     }
     return row[field.key] || "—";
   }
@@ -1079,6 +1427,7 @@
               <input type="file" id="csvImportInput" accept=".csv" style="display:none" />
               <button class="btn-ghost" id="importCsvBtn">Importer un CSV</button>
               <button class="btn-ghost" id="exportCsvBtn">Exporter en CSV</button>
+              ${state.currentUser.role === "enseignant" ? `<button class="btn-danger" id="clearTableBtn">Vider cette table</button>` : ""}
             </div>
           </div>
           ${tableHTML}
@@ -1098,10 +1447,11 @@
     }
 
     document.getElementById("exportCsvBtn").addEventListener("click", () => {
-      const headers = [...t.fields.map(f => f.label), "Saisi par"];
+      const csvFields = t.fields.filter(f => f.type !== "image");
+      const headers = [...csvFields.map(f => f.label), "Saisi par"];
       const csvRows = [headers.join(";")];
       rows.forEach(row => {
-        const values = t.fields.map(f => `"${(displayValue(row, f) + "").replace(/<[^>]+>/g,"").replace(/"/g,'""')}"`);
+        const values = csvFields.map(f => `"${(displayValue(row, f) + "").replace(/<[^>]+>/g,"").replace(/"/g,'""')}"`);
         values.push(`"${(row.createdByNom || "").replace(/"/g,'""')}"`);
         csvRows.push(values.join(";"));
       });
@@ -1126,11 +1476,65 @@
       e.target.value = "";
     });
 
+    const clearTableBtn = document.getElementById("clearTableBtn");
+    if(clearTableBtn){
+      clearTableBtn.addEventListener("click", async () => {
+        const count = state.moduleData[state.activeTable].length;
+        if(count === 0){ showToast("Cette table est déjà vide."); return; }
+        const cascadeWarning = (state.activeTable === "produits" || state.activeTable === "emplacements")
+          ? "\n\nLes lignes de Stock qui référencent ces entrées seront aussi supprimées automatiquement." : "";
+        const sure = confirm(
+          `⚠️ Vider entièrement la table « ${t.label} » (groupe ${state.activeGroupe}) ?\n\n` +
+          `Cela supprimera définitivement les ${count} entrée(s) actuelles. Cette action est irréversible.${cascadeWarning}`
+        );
+        if(!sure) return;
+        const doubleCheck = confirm(`Dernière confirmation : supprimer les ${count} entrée(s) de « ${t.label} » ? Il n'y a pas de retour en arrière possible.`);
+        if(!doubleCheck) return;
+        try{
+          await dbRefGroupe(state.activeTable).remove();
+          state.moduleData[state.activeTable] = [];
+          state.editingRowId = null;
+          if(state.activeTable === "produits" || state.activeTable === "emplacements"){
+            const removedCount = await reconcileStockOrphans();
+            showToast(removedCount > 0 ? `Table « ${t.label} » vidée. ${removedCount} ligne(s) de stock orpheline(s) nettoyée(s).` : `Table « ${t.label} » vidée.`);
+          } else {
+            showToast(`Table « ${t.label} » vidée.`);
+          }
+          render();
+        }catch(e){
+          showToast("Échec de la suppression.");
+        }
+      });
+    }
+
     const host = document.getElementById("fieldsHost");
     t.fields.forEach(f => {
       const wrap = document.createElement("div");
       wrap.innerHTML = `<label for="f_${f.key}">${f.label}${f.required ? " *" : ""}</label>${fieldInputHTML(f, editingRow ? editingRow[f.key] : undefined)}`;
       host.appendChild(wrap);
+    });
+
+    t.fields.filter(f => f.type === "image").forEach(f => {
+      const fileInput = document.getElementById(`f_${f.key}`);
+      const preview = document.getElementById(`preview_${f.key}`);
+      const currentFlag = document.getElementById(`f_${f.key}_current`);
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files[0];
+        if(!file) return;
+        const dataUrl = await readAndCompressImage(file);
+        preview.innerHTML = `<img src="${dataUrl}" /><button type="button" class="image-remove" data-key="${f.key}">Retirer l'image</button>`;
+        currentFlag.value = dataUrl;
+        wireRemoveBtn(f.key);
+      });
+      wireRemoveBtn(f.key);
+      function wireRemoveBtn(key){
+        const btn = document.getElementById(`remove_${key}`) || preview.querySelector(".image-remove");
+        if(btn) btn.addEventListener("click", () => {
+          preview.innerHTML = "";
+          currentFlag.value = "";
+          fileInput.value = "";
+        });
+      }
     });
 
     content.querySelectorAll(".aisle-btn").forEach(btn => {
@@ -1151,6 +1555,16 @@
         ? { ...editingRow }
         : { id: uid(), createdBy: state.currentUser.matricule, createdByNom: state.currentUser.nom };
       for(const f of t.fields){
+        if(f.type === "image"){
+          const fileInput = document.getElementById(`f_${f.key}`);
+          const currentFlag = document.getElementById(`f_${f.key}_current`);
+          if(fileInput.files[0]){
+            entry[f.key] = await readAndCompressImage(fileInput.files[0]);
+          } else {
+            entry[f.key] = currentFlag.value || null;
+          }
+          continue;
+        }
         const el = document.getElementById(`f_${f.key}`);
         let val = el.value.trim ? el.value.trim() : el.value;
         if(f.required && !val){
@@ -1160,23 +1574,23 @@
         if(f.code) val = val.toUpperCase();
         entry[f.key] = val;
       }
+      // On recharge la table juste avant d'enregistrer, pour vérifier les doublons
+      // par rapport aux dernières entrées de vos camarades (et pas une copie locale périmée).
+      await loadModuleTable(state.activeTable);
       const keyField = t.fields.find(f => f.code);
       if(keyField){
         const dup = state.moduleData[state.activeTable].some(r => r[keyField.key] === entry[keyField.key] && r.id !== entry.id);
         if(dup){
           errorBox.innerHTML = `<div class="error-box">Cette référence existe déjà dans ${t.label.toLowerCase()}.</div>`;
+          render();
           return;
         }
       }
-      if(editingRow){
-        const idx = state.moduleData[state.activeTable].findIndex(r => r.id === entry.id);
-        state.moduleData[state.activeTable][idx] = entry;
-        state.editingRowId = null;
-      } else {
-        state.moduleData[state.activeTable].push(entry);
-      }
-      await saveModuleTable(state.activeTable);
+      const ok = await fbPutItem(dbRefGroupe(state.activeTable), entry);
+      if(!ok) return;
+      state.editingRowId = null;
       showToast(editingRow ? "Modifications enregistrées." : `Entrée ajoutée à ${t.label}.`);
+      await loadModuleTable(state.activeTable);
       render();
     });
 
@@ -1190,9 +1604,16 @@
     content.querySelectorAll(".del-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         if(state.editingRowId === btn.dataset.id) state.editingRowId = null;
-        state.moduleData[state.activeTable] = state.moduleData[state.activeTable].filter(r => r.id !== btn.dataset.id);
-        await saveModuleTable(state.activeTable);
-        showToast("Entrée supprimée.");
+        const idToDelete = btn.dataset.id;
+        const ok = await fbRemoveItem(dbRefGroupe(state.activeTable), idToDelete);
+        if(!ok) return;
+        state.moduleData[state.activeTable] = state.moduleData[state.activeTable].filter(r => r.id !== idToDelete);
+        if(state.activeTable === "produits" || state.activeTable === "emplacements"){
+          const removedCount = await reconcileStockOrphans();
+          showToast(removedCount > 0 ? `Entrée supprimée. ${removedCount} ligne(s) de stock orpheline(s) nettoyée(s).` : "Entrée supprimée.");
+        } else {
+          showToast("Entrée supprimée.");
+        }
         render();
       });
     });
@@ -1245,33 +1666,39 @@
       showToast("Fichier CSV vide ou illisible.");
       return;
     }
+    const csvFields = t.fields.filter(f => f.type !== "image");
     const headerRow = rows[0].map(h => h.trim().toLowerCase());
-    const fieldIndexes = t.fields.map(f => headerRow.indexOf(f.label.toLowerCase()));
+    const fieldIndexes = csvFields.map(f => headerRow.indexOf(f.label.toLowerCase()));
     if(fieldIndexes.some(idx => idx === -1)){
-      showToast(`Colonnes attendues pour ${t.label} : ${t.fields.map(f => f.label).join(", ")}.`);
+      showToast(`Colonnes attendues pour ${t.label} : ${csvFields.map(f => f.label).join(", ")}.`);
       return;
     }
-    const keyField = t.fields.find(f => f.code);
-    let added = 0, skipped = 0;
+    // Recharge la table la plus récente avant de vérifier les doublons
+    await loadModuleTable(state.activeTable);
+    const keyField = csvFields.find(f => f.code);
+    const newEntries = [];
+    let skipped = 0;
     for(let r = 1; r < rows.length; r++){
       const cells = rows[r];
       const entry = { id: uid(), createdBy: state.currentUser.matricule, createdByNom: state.currentUser.nom };
       let invalid = false;
-      t.fields.forEach((f, idx) => {
+      csvFields.forEach((f, idx) => {
         let val = (cells[fieldIndexes[idx]] || "").trim();
         if(f.code) val = val.toUpperCase();
         if(f.required && !val) invalid = true;
         entry[f.key] = val;
       });
       if(invalid){ skipped++; continue; }
-      if(keyField && state.moduleData[state.activeTable].some(row => row[keyField.key] === entry[keyField.key])){
-        skipped++; continue;
-      }
-      state.moduleData[state.activeTable].push(entry);
-      added++;
+      const existsAlready = keyField && (
+        state.moduleData[state.activeTable].some(row => row[keyField.key] === entry[keyField.key]) ||
+        newEntries.some(row => row[keyField.key] === entry[keyField.key])
+      );
+      if(existsAlready){ skipped++; continue; }
+      newEntries.push(entry);
     }
-    if(added > 0) await saveModuleTable(state.activeTable);
-    showToast(`${added} ligne(s) importée(s)${skipped ? `, ${skipped} ignorée(s)` : ""}.`);
+    await fbMergeItems(dbRefGroupe(state.activeTable), newEntries);
+    showToast(`${newEntries.length} ligne(s) importée(s)${skipped ? `, ${skipped} ignorée(s)` : ""}.`);
+    await loadModuleTable(state.activeTable);
     render();
   }
 
@@ -1291,20 +1718,816 @@
       showToast("Colonne « Matricule » introuvable dans le fichier.");
       return;
     }
-    let added = 0, skipped = 0;
+    // Recharge la liste des comptes la plus récente avant de vérifier les doublons
+    await loadUsers();
+    const newUsers = [];
+    let skipped = 0;
     for(let r = 1; r < rows.length; r++){
       const cells = rows[r];
       const matricule = (cells[idxMatricule] || "").trim().toUpperCase();
-      if(!matricule || findUser(matricule)){ if(matricule) skipped++; continue; }
+      if(!matricule || findUser(matricule) || newUsers.some(u => u.matricule === matricule)){
+        if(matricule) skipped++;
+        continue;
+      }
       const fullName = idxEleve !== -1 ? (cells[idxEleve] || "").trim() : "";
       const nom = fullName ? computeInitials(fullName) : matricule;
       const password = (idxMotDePasse !== -1 && (cells[idxMotDePasse] || "").trim()) ? cells[idxMotDePasse].trim() : matricule;
-      state.users.push({ id: uid(), matricule, nom, password, role: "eleve", groupe });
-      added++;
+      newUsers.push({ id: uid(), matricule, nom, password, role: "eleve", groupe });
     }
-    if(added > 0) await saveUsers();
-    showToast(`${added} élève(s) importé(s) dans ${groupe}${skipped ? `, ${skipped} déjà existant(s) ignoré(s)` : ""}.`);
+    await fbMergeItems(dbRef("users"), newUsers);
+    showToast(`${newUsers.length} élève(s) importé(s) dans ${groupe}${skipped ? `, ${skipped} déjà existant(s) ignoré(s)` : ""}.`);
+    await loadUsers();
     render();
+  }
+
+  /* ============ RENDER : MODULE PICKING (préparation de commandes) ============ */
+  function nextCommandeNumber(){
+    const n = state.commandes.length + 1;
+    return `BP-${String(n).padStart(4,"0")}`;
+  }
+
+  function stockRowsForProduit(ref){
+    return state.moduleData.stock.filter(s => s.produit_ref === ref);
+  }
+
+  function canDeleteCommande(c){
+    return state.currentUser.role === "enseignant" || c.createdBy === state.currentUser.matricule;
+  }
+
+  function renderModulePicking(content){
+    if(state.commandeView === "new") renderPickingNew(content);
+    else if(state.commandeView === "detail" && state.activeCommandeId) renderPickingDetail(content);
+    else renderPickingList(content);
+  }
+
+  function renderPickingList(content){
+    const commandes = state.commandes.slice().sort((a,b) => b.createdAt - a.createdAt);
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      ${state.currentUser.role === "enseignant" ? `<button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>` : ""}
+      <div class="panel mail-panel">
+        <div class="mail-toolbar">
+          <h2>Bons de préparation</h2>
+          <button class="btn btn-primary" id="newCommandeBtn" style="width:auto;">+ Nouvelle préparation</button>
+        </div>
+        ${commandes.length === 0 ? `<div class="mail-empty"><strong>Aucun bon de préparation</strong>Cliquez sur « Nouvelle préparation » pour commencer.</div>` : `
+          <table>
+            <thead><tr><th>N°</th><th>Client</th><th>Lignes</th><th>Statut</th><th>Créé par</th><th>Date</th></tr></thead>
+            <tbody>
+              ${commandes.map(c => `
+                <tr class="commande-row" data-id="${c.id}" style="cursor:pointer;">
+                  <td><span class="ref-tag">${c.numero}</span></td>
+                  <td>${c.clientNom}</td>
+                  <td>${c.lignes.length}</td>
+                  <td>${c.statut === "validee" ? `<span class="role-pill" style="background:var(--green);">Validée</span>` : `<span class="role-pill eleve">À préparer</span>`}</td>
+                  <td>${c.createdByNom || "—"}</td>
+                  <td>${new Date(c.createdAt).toLocaleDateString("fr-FR")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `}
+      </div>
+    `;
+    document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    const changeGroupeBtnPicking = document.getElementById("changeGroupeBtn");
+    if(changeGroupeBtnPicking){
+      changeGroupeBtnPicking.addEventListener("click", () => {
+        state.pendingModule = "picking";
+        state.view = "groupe-select";
+        render();
+      });
+    }
+    document.getElementById("newCommandeBtn").addEventListener("click", () => {
+      state.commandeView = "new";
+      render();
+    });
+    content.querySelectorAll(".commande-row").forEach(row => {
+      row.addEventListener("click", () => {
+        state.activeCommandeId = row.dataset.id;
+        state.commandeView = "detail";
+        state.commandeDocView = "preparation";
+        render();
+      });
+    });
+  }
+
+  function renderPickingNew(content){
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour à la liste</button>
+      <div class="panel">
+        <h2>Nouveau bon de préparation</h2>
+        ${state.moduleData.clients.length === 0 ? `
+          <div class="empty-state">Ajoutez au moins un client dans le module Base du magasin avant de préparer une commande.</div>
+        ` : state.moduleData.produits.length === 0 ? `
+          <div class="empty-state">Ajoutez au moins un produit dans le module Base du magasin avant de préparer une commande.</div>
+        ` : `
+          <label for="pkClient">Client</label>
+          <select id="pkClient">
+            <option value="">— Choisir un client —</option>
+            ${state.moduleData.clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join("")}
+          </select>
+          <label style="margin-top:10px;">Adresse de livraison</label>
+          <input id="pkAdresse" type="text" disabled placeholder="Se remplit automatiquement selon le client choisi" />
+
+          <label style="margin-top:14px;">Produits à préparer</label>
+          <div id="pkLines"></div>
+          <button class="btn-ghost" id="pkAddLineBtn" style="margin-top:8px;">+ Ajouter un produit</button>
+
+          <div id="pkError"></div>
+          <button class="btn btn-primary" id="pkCreateBtn" style="width:auto; margin-top:16px;">Créer le bon de préparation</button>
+        `}
+      </div>
+    `;
+    document.getElementById("backBtn").addEventListener("click", () => { state.commandeView = "list"; render(); });
+
+    if(state.moduleData.clients.length === 0 || state.moduleData.produits.length === 0) return;
+
+    const clientSelect = document.getElementById("pkClient");
+    const adresseInput = document.getElementById("pkAdresse");
+    clientSelect.addEventListener("change", () => {
+      const c = state.moduleData.clients.find(x => x.id === clientSelect.value);
+      adresseInput.value = c ? (c.adresse || "(aucune adresse renseignée)") : "";
+    });
+
+    const linesHost = document.getElementById("pkLines");
+    let lineCount = 0;
+
+    function emplacementOptionsFor(ref){
+      const stocks = stockRowsForProduit(ref);
+      if(stocks.length === 0) return `<option value="">Aucun stock disponible</option>`;
+      return stocks.map(s => {
+        const empl = state.moduleData.emplacements.find(e => e.code_emplacement === s.emplacement_code);
+        return `<option value="${s.emplacement_code}">${s.emplacement_code}${empl ? ` (${empl.zone})` : ""} — dispo : ${s.quantite}</option>`;
+      }).join("");
+    }
+
+    function addLine(){
+      lineCount++;
+      const row = document.createElement("div");
+      row.className = "order-line";
+      row.dataset.lineId = lineCount;
+      const firstRef = state.moduleData.produits[0].reference;
+      row.innerHTML = `
+        <select class="pk-line-produit">${state.moduleData.produits.map(p => `<option value="${p.reference}">${p.reference} — ${p.designation}</option>`).join("")}</select>
+        <select class="pk-line-emplacement">${emplacementOptionsFor(firstRef)}</select>
+        <input class="pk-line-qte" type="number" min="1" value="1" placeholder="Qté" />
+        <button type="button" class="order-line-remove" title="Retirer cette ligne">✕</button>
+      `;
+      row.querySelector(".pk-line-produit").addEventListener("change", (e) => {
+        row.querySelector(".pk-line-emplacement").innerHTML = emplacementOptionsFor(e.target.value);
+      });
+      row.querySelector(".order-line-remove").addEventListener("click", () => {
+        if(linesHost.children.length > 1){ row.remove(); }
+        else { showToast("Il faut au moins une ligne de produit."); }
+      });
+      linesHost.appendChild(row);
+    }
+    addLine();
+    document.getElementById("pkAddLineBtn").addEventListener("click", addLine);
+
+    document.getElementById("pkCreateBtn").addEventListener("click", async () => {
+      const errorBox = document.getElementById("pkError");
+      errorBox.innerHTML = "";
+      const client = state.moduleData.clients.find(c => c.id === clientSelect.value);
+      if(!client){
+        errorBox.innerHTML = `<div class="error-box">Choisissez un client.</div>`;
+        return;
+      }
+      const lineRows = [...linesHost.querySelectorAll(".order-line")];
+      const lignes = lineRows.map(row => {
+        const ref = row.querySelector(".pk-line-produit").value;
+        const emplacement_code = row.querySelector(".pk-line-emplacement").value;
+        const qte = parseInt(row.querySelector(".pk-line-qte").value, 10);
+        const produit = state.moduleData.produits.find(p => p.reference === ref);
+        return {
+          produit_ref: ref,
+          designation: produit ? produit.designation : ref,
+          emplacement_code: emplacement_code || null,
+          qteCommandee: qte,
+          qtePrelevee: null
+        };
+      });
+      if(lignes.some(l => !l.qteCommandee || l.qteCommandee < 1)){
+        errorBox.innerHTML = `<div class="error-box">Chaque ligne doit avoir une quantité d'au moins 1.</div>`;
+        return;
+      }
+      const commande = {
+        id: uid(),
+        numero: nextCommandeNumber(),
+        clientId: client.id,
+        clientNom: client.nom,
+        adresse: client.adresse || "",
+        lignes,
+        statut: "a_valider",
+        createdBy: state.currentUser.matricule,
+        createdByNom: state.currentUser.nom,
+        createdAt: Date.now()
+      };
+      state.commandes.push(commande);
+      await fbPutItem(dbRefGroupe("commandes"), commande);
+      showToast(`Bon de préparation ${commande.numero} créé.`);
+      state.activeCommandeId = commande.id;
+      state.commandeView = "detail";
+      state.commandeDocView = "preparation";
+      render();
+    });
+  }
+
+  const CONDITIONS_PORT = ["Franco de port", "Port dû", "Port payé forfaitaire"];
+
+  const LYCEE_ADRESSE = "Lycée professionnel Gaston Darboux — 7 rue Jules Raimu, 30900 Nîmes";
+
+  function renderLivraisonSettingsHTML(c){
+    const conditions = c.fraisPort || "";
+    const showMontant = conditions === "Port dû" || conditions === "Port payé forfaitaire";
+    return `
+      <div class="panel no-print" style="margin-top:12px;">
+        <h2>Informations du bon de livraison</h2>
+        <div class="livraison-help-grid">
+          <div>
+            <div class="admin-form-row">
+              <div>
+                <label for="lvReceptionnaire">Réceptionnaire (nom de la personne qui réceptionne)</label>
+                <input id="lvReceptionnaire" type="text" value="${(c.receptionnaire || c.clientContact || "").replace(/"/g,"&quot;")}" placeholder="ex : M. Martin" />
+              </div>
+              <div>
+                <label for="lvConditions">Conditions de port</label>
+                <select id="lvConditions">
+                  <option value="">— Choisir —</option>
+                  ${CONDITIONS_PORT.map(opt => `<option value="${opt}" ${conditions === opt ? "selected" : ""}>${opt}</option>`).join("")}
+                </select>
+              </div>
+              <div id="lvMontantWrap" style="${showMontant ? "" : "display:none;"}">
+                <label for="lvMontant">Montant du port (€)</label>
+                <input id="lvMontant" type="number" min="0" step="0.01" value="${c.montantPort ?? ""}" placeholder="ex : 12.50" />
+              </div>
+            </div>
+            <button class="btn btn-primary" id="lvSaveBtn" style="width:auto; margin-top:10px;">Enregistrer ces informations</button>
+          </div>
+          <div class="help-box">
+            <div class="help-box-title">Conditions de port : ce que ça signifie</div>
+            <ul>
+              <li><strong>Franco de port</strong> — le transport est offert : l'expéditeur (le lycée) prend en charge les frais de transport, le client ne paie que la marchandise.</li>
+              <li><strong>Port dû</strong> — le client paie lui-même les frais de transport, généralement directement au transporteur à la livraison.</li>
+              <li><strong>Port payé forfaitaire</strong> — l'expéditeur facture un montant fixe de transport au client, quel que soit le coût réel du transport.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function wireLivraisonSettings(c, content){
+    const conditionsSelect = document.getElementById("lvConditions");
+    const montantWrap = document.getElementById("lvMontantWrap");
+    conditionsSelect.addEventListener("change", () => {
+      const show = conditionsSelect.value === "Port dû" || conditionsSelect.value === "Port payé forfaitaire";
+      montantWrap.style.display = show ? "" : "none";
+    });
+    document.getElementById("lvSaveBtn").addEventListener("click", async () => {
+      c.receptionnaire = document.getElementById("lvReceptionnaire").value.trim();
+      c.fraisPort = conditionsSelect.value;
+      const montantVal = document.getElementById("lvMontant").value;
+      c.montantPort = montantVal ? parseFloat(montantVal) : null;
+      await fbPutItem(dbRefGroupe("commandes"), c);
+      showToast("Informations du bon de livraison enregistrées.");
+      render();
+    });
+  }
+
+  function renderBonLivraisonHTML(c){
+    const totalColis = c.lignes.reduce((sum, l) => sum + (l.qtePrelevee || 0), 0);
+    return `
+      <div class="bon-header">
+        <div>
+          <h2 style="border:none; padding:0; margin:4px 0;">Bon de livraison ${c.numero}</h2>
+          <div class="hint">Date : ${new Date(c.validatedAt || c.createdAt).toLocaleDateString("fr-FR")}</div>
+        </div>
+      </div>
+      <div class="livraison-parties">
+        <div class="bon-client">
+          <div class="institution-line">Expéditeur</div>
+          <strong>${LYCEE_ADRESSE.split(" — ")[0]}</strong><br/>
+          ${LYCEE_ADRESSE.split(" — ")[1]}<br/>
+          Préparé par : ${c.createdByNom} (élève)
+        </div>
+        <div class="bon-client">
+          <div class="institution-line">Destinataire</div>
+          <strong>${c.clientNom}</strong><br/>
+          ${c.adresse ? c.adresse.replace(/</g,"&lt;") : "(aucune adresse renseignée)"}<br/>
+          ${c.receptionnaire ? `Réceptionnaire : ${c.receptionnaire.replace(/</g,"&lt;")}` : ""}
+        </div>
+      </div>
+      <div class="bon-client" style="margin-top:12px;">
+        <strong>Conditions de transport</strong><br/>
+        ${c.fraisPort || "(non renseignées)"}${c.montantPort ? ` — ${c.montantPort.toFixed(2)} €` : ""}
+      </div>
+      <table style="margin-top:16px;">
+        <thead><tr><th>Référence</th><th>Désignation</th><th>Quantité livrée</th></tr></thead>
+        <tbody>
+          ${c.lignes.map(l => `
+            <tr>
+              <td><span class="ref-tag">${l.produit_ref}</span></td>
+              <td>${l.designation}</td>
+              <td>${l.qtePrelevee ?? l.qteCommandee}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot><tr><td colspan="2" style="text-align:right; font-weight:700;">Total colis livrés</td><td style="font-weight:700;">${totalColis}</td></tr></tfoot>
+      </table>
+      <div class="signature-row">
+        <div class="signature-box">Signature expéditeur</div>
+        <div class="signature-box">Signature destinataire</div>
+      </div>
+    `;
+  }
+
+  function renderPickingDetail(content){
+    const c = state.commandes.find(x => x.id === state.activeCommandeId);
+    if(!c){ state.commandeView = "list"; render(); return; }
+    const isValidated = c.statut === "validee";
+    const docView = state.commandeDocView === "livraison" && isValidated ? "livraison" : "preparation";
+
+    const tabsHTML = `
+      <div class="doc-tabs no-print">
+        <button class="doc-tab ${docView === "preparation" ? "active" : ""}" id="tabPreparation">Bon de préparation</button>
+        <button class="doc-tab ${docView === "livraison" ? "active" : ""}" id="tabLivraison" ${!isValidated ? "disabled title=\"Disponible une fois la préparation validée\"" : ""}>Bon de livraison</button>
+      </div>
+    `;
+
+    const printAreaHTML = docView === "livraison" ? renderBonLivraisonHTML(c) : `
+      <div class="bon-header">
+        <div>
+          <div class="institution-line">LYCÉE GASTON DARBOUX — NÎMES</div>
+          <h2 style="border:none; padding:0; margin:4px 0;">Bon de préparation ${c.numero}</h2>
+          <div class="hint">Groupe ${state.activeGroupe} · Créé par ${c.createdByNom} le ${new Date(c.createdAt).toLocaleString("fr-FR")}</div>
+        </div>
+        <div>${isValidated ? `<span class="role-pill" style="background:var(--green);">Validée</span>` : `<span class="role-pill eleve">À préparer</span>`}</div>
+      </div>
+      <div class="bon-client">
+        <strong>${c.clientNom}</strong><br/>
+        ${c.adresse ? c.adresse.replace(/</g,"&lt;") : "(aucune adresse renseignée)"}
+      </div>
+      <table style="margin-top:16px;">
+        <thead><tr><th>Référence</th><th>Désignation</th><th>Emplacement</th><th>Qté commandée</th><th>Qté prélevée</th></tr></thead>
+        <tbody>
+          ${c.lignes.map((l,idx) => `
+            <tr>
+              <td><span class="ref-tag">${l.produit_ref}</span></td>
+              <td>${l.designation}</td>
+              <td>${l.emplacement_code ? `<span class="ref-tag">${l.emplacement_code}</span>` : `<em>Aucun stock</em>`}</td>
+              <td>${l.qteCommandee}</td>
+              <td>${isValidated ? (l.qtePrelevee ?? 0) : `<input type="number" min="0" class="valid-qte-input no-print-input" data-idx="${idx}" placeholder="${l.qteCommandee}" style="width:70px;" />`}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour à la liste</button>
+      <button class="btn-ghost no-print" id="printBtn" style="margin-left:16px;">Imprimer</button>
+      ${!isValidated && canDeleteCommande(c) ? `<button class="btn-danger no-print" id="deleteCommandeBtn" style="margin-left:10px;">Supprimer</button>` : ""}
+
+      ${tabsHTML}
+
+      ${docView === "livraison" ? renderLivraisonSettingsHTML(c) : ""}
+
+      <div class="panel" id="printArea" style="margin-top:12px;">
+        ${printAreaHTML}
+      </div>
+
+      ${docView === "preparation" && !isValidated ? `
+        <div class="panel no-print" style="margin-top:16px;">
+          <h2>Validation du prélèvement</h2>
+          <p class="hint" style="margin-bottom:12px;">Indiquez la quantité réellement prélevée pour chaque ligne (par défaut, la quantité commandée). Valider mettra à jour le stock automatiquement.</p>
+          <div id="validateError"></div>
+          <button class="btn btn-primary" id="validateBtn" style="width:auto;">Valider la préparation et mettre à jour le stock</button>
+        </div>
+      ` : ""}
+      ${docView === "preparation" && isValidated ? `
+        <div class="info-box no-print" style="margin-top:16px;">Préparation validée le ${new Date(c.validatedAt).toLocaleString("fr-FR")}. Le stock a été mis à jour en conséquence. Vous pouvez maintenant imprimer le bon de livraison.</div>
+      ` : ""}
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => { state.commandeView = "list"; state.activeCommandeId = null; render(); });
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    document.getElementById("tabPreparation").addEventListener("click", () => { state.commandeDocView = "preparation"; render(); });
+    const tabLivraison = document.getElementById("tabLivraison");
+    if(tabLivraison && !tabLivraison.disabled){
+      tabLivraison.addEventListener("click", () => { state.commandeDocView = "livraison"; render(); });
+    }
+    const deleteCommandeBtn = document.getElementById("deleteCommandeBtn");
+    if(deleteCommandeBtn) deleteCommandeBtn.addEventListener("click", async () => {
+      if(!confirm(`Supprimer le bon de préparation ${c.numero} ? Cette action est irréversible.`)) return;
+      const ok = await fbRemoveItem(dbRefGroupe("commandes"), c.id);
+      if(!ok) return;
+      state.commandes = state.commandes.filter(x => x.id !== c.id);
+      state.commandeView = "list"; state.activeCommandeId = null;
+      showToast("Bon de préparation supprimé.");
+      render();
+    });
+
+    if(docView === "livraison"){
+      wireLivraisonSettings(c, content);
+      return;
+    }
+
+    if(isValidated) return;
+
+    document.getElementById("validateBtn").addEventListener("click", async () => {
+      const errorBox = document.getElementById("validateError");
+      errorBox.innerHTML = "";
+      const inputs = [...content.querySelectorAll(".valid-qte-input")];
+      const qtes = inputs.map(inp => parseInt(inp.value, 10));
+      if(qtes.some(q => isNaN(q) || q < 0)){
+        errorBox.innerHTML = `<div class="error-box">Chaque quantité prélevée doit être un nombre positif ou nul.</div>`;
+        return;
+      }
+
+      // Recharge le stock le plus récent avant de déduire (concurrence avec d'autres élèves)
+      await loadModuleTable("stock");
+
+      for(let i = 0; i < c.lignes.length; i++){
+        const ligne = c.lignes[i];
+        const qtePrelevee = qtes[i];
+        ligne.qtePrelevee = qtePrelevee;
+        if(ligne.emplacement_code && qtePrelevee > 0){
+          const stockRow = state.moduleData.stock.find(s => s.produit_ref === ligne.produit_ref && s.emplacement_code === ligne.emplacement_code);
+          if(stockRow){
+            stockRow.quantite = Math.max(0, (parseInt(stockRow.quantite, 10) || 0) - qtePrelevee);
+            await fbPutItem(dbRefGroupe("stock"), stockRow);
+          }
+        }
+      }
+
+      c.statut = "validee";
+      c.validatedAt = Date.now();
+      await fbPutItem(dbRefGroupe("commandes"), c);
+
+      showToast("Préparation validée, stock mis à jour.");
+      render();
+    });
+  }
+
+  /* ============ RENDER : MODULE RECEPTION (contrôle réception fournisseur) ============ */
+  function nextReceptionNumber(){
+    const n = state.receptions.length + 1;
+    return `BR-${String(n).padStart(4,"0")}`;
+  }
+
+  function canDeleteReception(r){
+    return state.currentUser.role === "enseignant" || r.createdBy === state.currentUser.matricule;
+  }
+
+  function generateRandomReceptionLines(){
+    const produits = state.moduleData.produits;
+    const emplacements = state.moduleData.emplacements;
+    if(produits.length === 0 || emplacements.length === 0) return [];
+    const count = Math.min(produits.length, 2 + Math.floor(Math.random() * 4)); // 2 à 5 lignes
+    const shuffled = [...produits].sort(() => Math.random() - 0.5).slice(0, count);
+    return shuffled.map(p => {
+      const empl = emplacements[Math.floor(Math.random() * emplacements.length)];
+      const qte = 5 + Math.floor(Math.random() * 46); // 5 à 50
+      return { produit_ref: p.reference, designation: p.designation, emplacement_code: empl.code_emplacement, qteAnnoncee: qte };
+    });
+  }
+
+  function renderModuleReception(content){
+    if(state.receptionView === "new") renderReceptionNew(content);
+    else if(state.receptionView === "detail" && state.activeReceptionId) renderReceptionDetail(content);
+    else renderReceptionList(content);
+  }
+
+  function renderReceptionList(content){
+    const receptions = state.receptions.slice().sort((a,b) => b.createdAt - a.createdAt);
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      ${state.currentUser.role === "enseignant" ? `<button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>` : ""}
+      <div class="panel mail-panel">
+        <div class="mail-toolbar">
+          <h2>Bons de réception</h2>
+          <button class="btn btn-primary" id="newReceptionBtn" style="width:auto;">+ Nouvelle réception</button>
+        </div>
+        ${receptions.length === 0 ? `<div class="mail-empty"><strong>Aucun bon de réception</strong>Cliquez sur « Nouvelle réception » pour commencer.</div>` : `
+          <table>
+            <thead><tr><th>N°</th><th>Fournisseur</th><th>Origine</th><th>Lignes</th><th>Statut</th><th>Créé par</th><th>Date</th></tr></thead>
+            <tbody>
+              ${receptions.map(r => `
+                <tr class="reception-row" data-id="${r.id}" style="cursor:pointer;">
+                  <td><span class="ref-tag">${r.numero}</span></td>
+                  <td>${r.fournisseurNom || "—"}</td>
+                  <td>${r.origine === "preparation" ? "Basée sur préparation" : "Aléatoire"}</td>
+                  <td>${r.lignes.length}</td>
+                  <td>${r.statut === "receptionnee" ? `<span class="role-pill" style="background:var(--green);">Réceptionnée</span>` : `<span class="role-pill eleve">En attente</span>`}</td>
+                  <td>${r.createdByNom || "—"}</td>
+                  <td>${new Date(r.createdAt).toLocaleDateString("fr-FR")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `}
+      </div>
+    `;
+    document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    const changeGroupeBtnReception = document.getElementById("changeGroupeBtn");
+    if(changeGroupeBtnReception){
+      changeGroupeBtnReception.addEventListener("click", () => {
+        state.pendingModule = "reception";
+        state.view = "groupe-select";
+        render();
+      });
+    }
+    document.getElementById("newReceptionBtn").addEventListener("click", () => {
+      state.receptionView = "new";
+      render();
+    });
+    content.querySelectorAll(".reception-row").forEach(row => {
+      row.addEventListener("click", () => {
+        state.activeReceptionId = row.dataset.id;
+        state.receptionView = "detail";
+        render();
+      });
+    });
+  }
+
+  function renderReceptionNew(content){
+    const canBuild = state.moduleData.produits.length > 0 && state.moduleData.emplacements.length > 0;
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour à la liste</button>
+      <div class="panel">
+        <h2>Nouveau bon de réception</h2>
+        ${!canBuild ? `<div class="empty-state">Ajoutez au moins un produit et un emplacement dans le module Base du magasin avant de créer une réception.</div>` : `
+          <label>Origine</label>
+          <div style="display:flex; gap:20px; margin-bottom:12px; font-size:13.5px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="rcOrigine" value="aleatoire" id="origineAleatoire" checked /> Génération aléatoire</label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="rcOrigine" value="preparation" id="originePreparation" /> Basée sur une préparation existante</label>
+          </div>
+
+          <div id="blocAleatoire">
+            <button class="btn-ghost" id="rcGenerateBtn">🎲 Générer aléatoirement</button>
+          </div>
+          <div id="blocPreparation" style="display:none;">
+            <label for="rcCommandeSelect">Préparation de référence</label>
+            <select id="rcCommandeSelect">
+              <option value="">— Choisir un bon de préparation —</option>
+              ${state.commandes.map(c => `<option value="${c.id}">${c.numero} — ${c.clientNom} (${c.lignes.length} ligne(s))</option>`).join("")}
+            </select>
+          </div>
+
+          <label style="margin-top:14px;" for="rcFournisseur">Fournisseur</label>
+          <select id="rcFournisseur">
+            <option value="">— Choisir un fournisseur —</option>
+            ${state.moduleData.fournisseurs.map(f => `<option value="${f.id}">${f.nom}</option>`).join("")}
+          </select>
+
+          <label style="margin-top:14px;">Produits annoncés</label>
+          <div id="rcLines"></div>
+          <button class="btn-ghost" id="rcAddLineBtn" style="margin-top:8px;">+ Ajouter un produit</button>
+
+          <div id="rcError"></div>
+          <button class="btn btn-primary" id="rcCreateBtn" style="width:auto; margin-top:16px;">Créer le bon de réception</button>
+        `}
+      </div>
+    `;
+    document.getElementById("backBtn").addEventListener("click", () => { state.receptionView = "list"; render(); });
+    if(!canBuild) return;
+
+    const linesHost = document.getElementById("rcLines");
+    const fournisseurSelect = document.getElementById("rcFournisseur");
+
+    function addRcLine(prefill){
+      const row = document.createElement("div");
+      row.className = "order-line";
+      row.innerHTML = `
+        <select class="rc-line-produit">${state.moduleData.produits.map(p => `<option value="${p.reference}" ${prefill && prefill.produit_ref === p.reference ? "selected" : ""}>${p.reference} — ${p.designation}</option>`).join("")}</select>
+        <select class="rc-line-emplacement">${state.moduleData.emplacements.map(e => `<option value="${e.code_emplacement}" ${prefill && prefill.emplacement_code === e.code_emplacement ? "selected" : ""}>${e.code_emplacement}</option>`).join("")}</select>
+        <input class="rc-line-qte" type="number" min="1" value="${prefill ? prefill.qteAnnoncee : 1}" placeholder="Qté" />
+        <button type="button" class="order-line-remove" title="Retirer cette ligne">✕</button>
+      `;
+      row.querySelector(".order-line-remove").addEventListener("click", () => {
+        if(linesHost.children.length > 1){ row.remove(); }
+        else { showToast("Il faut au moins une ligne de produit."); }
+      });
+      linesHost.appendChild(row);
+    }
+
+    function resetLines(prefillArray){
+      linesHost.innerHTML = "";
+      if(prefillArray && prefillArray.length > 0){
+        prefillArray.forEach(p => addRcLine(p));
+      } else {
+        addRcLine(null);
+      }
+    }
+
+    resetLines();
+    document.getElementById("rcAddLineBtn").addEventListener("click", () => addRcLine(null));
+
+    const blocAleatoire = document.getElementById("blocAleatoire");
+    const blocPreparation = document.getElementById("blocPreparation");
+    document.querySelectorAll('input[name="rcOrigine"]').forEach(radio => {
+      radio.addEventListener("change", () => {
+        const isPrepa = document.getElementById("originePreparation").checked;
+        blocAleatoire.style.display = isPrepa ? "none" : "block";
+        blocPreparation.style.display = isPrepa ? "block" : "none";
+        resetLines();
+      });
+    });
+
+    document.getElementById("rcGenerateBtn").addEventListener("click", () => {
+      const lines = generateRandomReceptionLines();
+      resetLines(lines);
+      if(state.moduleData.fournisseurs.length > 0){
+        fournisseurSelect.value = state.moduleData.fournisseurs[Math.floor(Math.random() * state.moduleData.fournisseurs.length)].id;
+      }
+      showToast("Lignes générées aléatoirement.");
+    });
+
+    document.getElementById("rcCommandeSelect").addEventListener("change", (e) => {
+      const cmd = state.commandes.find(c => c.id === e.target.value);
+      if(!cmd){ resetLines(); return; }
+      const prefill = cmd.lignes.map(l => ({
+        produit_ref: l.produit_ref,
+        designation: l.designation,
+        emplacement_code: l.emplacement_code || (state.moduleData.emplacements[0] ? state.moduleData.emplacements[0].code_emplacement : ""),
+        qteAnnoncee: l.qteCommandee
+      }));
+      resetLines(prefill);
+    });
+
+    document.getElementById("rcCreateBtn").addEventListener("click", async () => {
+      const errorBox = document.getElementById("rcError");
+      errorBox.innerHTML = "";
+      const fournisseur = state.moduleData.fournisseurs.find(f => f.id === fournisseurSelect.value);
+      if(!fournisseur){
+        errorBox.innerHTML = `<div class="error-box">Choisissez un fournisseur.</div>`;
+        return;
+      }
+      const isPrepa = document.getElementById("originePreparation").checked;
+      const commandeRef = isPrepa ? state.commandes.find(c => c.id === document.getElementById("rcCommandeSelect").value) : null;
+      if(isPrepa && !commandeRef){
+        errorBox.innerHTML = `<div class="error-box">Choisissez un bon de préparation de référence.</div>`;
+        return;
+      }
+      const lineRows = [...linesHost.querySelectorAll(".order-line")];
+      const lignes = lineRows.map(row => {
+        const ref = row.querySelector(".rc-line-produit").value;
+        const emplacement_code = row.querySelector(".rc-line-emplacement").value;
+        const qte = parseInt(row.querySelector(".rc-line-qte").value, 10);
+        const produit = state.moduleData.produits.find(p => p.reference === ref);
+        return {
+          produit_ref: ref,
+          designation: produit ? produit.designation : ref,
+          emplacement_code,
+          qteAnnoncee: qte,
+          qteRecue: null, qteAcceptee: null, qteRefusee: null, observation: ""
+        };
+      });
+      if(lignes.some(l => !l.qteAnnoncee || l.qteAnnoncee < 1)){
+        errorBox.innerHTML = `<div class="error-box">Chaque ligne doit avoir une quantité annoncée d'au moins 1.</div>`;
+        return;
+      }
+      const reception = {
+        id: uid(),
+        numero: nextReceptionNumber(),
+        fournisseurId: fournisseur.id,
+        fournisseurNom: fournisseur.nom,
+        origine: isPrepa ? "preparation" : "aleatoire",
+        commandeRefId: commandeRef ? commandeRef.id : null,
+        commandeRefNumero: commandeRef ? commandeRef.numero : null,
+        lignes,
+        statut: "a_receptionner",
+        createdBy: state.currentUser.matricule,
+        createdByNom: state.currentUser.nom,
+        createdAt: Date.now()
+      };
+      state.receptions.push(reception);
+      await fbPutItem(dbRefGroupe("receptions"), reception);
+      showToast(`Bon de réception ${reception.numero} créé.`);
+      state.activeReceptionId = reception.id;
+      state.receptionView = "detail";
+      render();
+    });
+  }
+
+  function renderReceptionDetail(content){
+    const r = state.receptions.find(x => x.id === state.activeReceptionId);
+    if(!r){ state.receptionView = "list"; render(); return; }
+    const isValidated = r.statut === "receptionnee";
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour à la liste</button>
+      <button class="btn-ghost no-print" id="printBtn" style="margin-left:16px;">Imprimer</button>
+      ${!isValidated && canDeleteReception(r) ? `<button class="btn-danger no-print" id="deleteReceptionBtn" style="margin-left:10px;">Supprimer</button>` : ""}
+
+      <div class="panel" id="printArea" style="margin-top:16px;">
+        <div class="bon-header">
+          <div>
+            <div class="institution-line">LYCÉE GASTON DARBOUX — NÎMES</div>
+            <h2 style="border:none; padding:0; margin:4px 0;">Bon de contrôle réception ${r.numero}</h2>
+            <div class="hint">Groupe ${state.activeGroupe} · Fournisseur : <strong>${r.fournisseurNom}</strong> · Créé par ${r.createdByNom} le ${new Date(r.createdAt).toLocaleString("fr-FR")}</div>
+            ${r.commandeRefNumero ? `<div class="hint">En lien avec la préparation ${r.commandeRefNumero}</div>` : ""}
+          </div>
+          <div>${isValidated ? `<span class="role-pill" style="background:var(--green);">Réceptionnée</span>` : `<span class="role-pill eleve">En attente</span>`}</div>
+        </div>
+        <table style="margin-top:6px;">
+          <thead><tr>
+            <th>Référence</th><th>Désignation</th><th>Emplacement</th><th>Qté annoncée</th>
+            <th>Qté reçue</th><th>Qté acceptée</th><th>Qté refusée</th><th>Observations</th>
+          </tr></thead>
+          <tbody>
+            ${r.lignes.map((l, idx) => `
+              <tr>
+                <td><span class="ref-tag">${l.produit_ref}</span></td>
+                <td>${l.designation}</td>
+                <td><span class="ref-tag">${l.emplacement_code}</span></td>
+                <td>${l.qteAnnoncee}</td>
+                <td>${isValidated ? (l.qteRecue ?? "—") : `<input type="number" min="0" class="rc-qte-recue no-print-input" data-idx="${idx}" placeholder="${l.qteAnnoncee}" style="width:64px;" />`}</td>
+                <td>${isValidated ? (l.qteAcceptee ?? "—") : `<input type="number" min="0" class="rc-qte-acceptee no-print-input" data-idx="${idx}" placeholder="${l.qteAnnoncee}" style="width:64px;" />`}</td>
+                <td>${isValidated ? (l.qteRefusee ?? 0) : `<input type="number" min="0" class="rc-qte-refusee no-print-input" data-idx="${idx}" placeholder="0" style="width:64px;" />`}</td>
+                <td>${isValidated ? (l.observation || "—") : `<input type="text" class="rc-observation no-print-input" data-idx="${idx}" placeholder="ex : carton abîmé" style="width:130px;" />`}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+
+      ${!isValidated ? `
+        <div class="panel no-print" style="margin-top:16px;">
+          <h2>Validation de la réception</h2>
+          <p class="hint" style="margin-bottom:12px;">Saisissez les quantités réellement reçues, acceptées et refusées, ainsi que vos observations. Valider ajoutera les quantités acceptées au stock.</p>
+          <div id="validateRcError"></div>
+          <button class="btn btn-primary" id="validateRcBtn" style="width:auto;">Valider la réception et mettre à jour le stock</button>
+        </div>
+      ` : `
+        <div class="info-box no-print" style="margin-top:16px;">Réception validée le ${new Date(r.validatedAt).toLocaleString("fr-FR")} par ${r.receptionedByNom}. Le stock a été mis à jour en conséquence.</div>
+      `}
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => { state.receptionView = "list"; state.activeReceptionId = null; render(); });
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    const deleteReceptionBtn = document.getElementById("deleteReceptionBtn");
+    if(deleteReceptionBtn) deleteReceptionBtn.addEventListener("click", async () => {
+      if(!confirm(`Supprimer le bon de réception ${r.numero} ? Cette action est irréversible.`)) return;
+      const ok = await fbRemoveItem(dbRefGroupe("receptions"), r.id);
+      if(!ok) return;
+      state.receptions = state.receptions.filter(x => x.id !== r.id);
+      state.receptionView = "list"; state.activeReceptionId = null;
+      showToast("Bon de réception supprimé.");
+      render();
+    });
+
+    if(isValidated) return;
+
+    document.getElementById("validateRcBtn").addEventListener("click", async () => {
+      const errorBox = document.getElementById("validateRcError");
+      errorBox.innerHTML = "";
+      const recues = [...content.querySelectorAll(".rc-qte-recue")].map(inp => parseInt(inp.value, 10));
+      const acceptees = [...content.querySelectorAll(".rc-qte-acceptee")].map(inp => parseInt(inp.value, 10));
+      const refusees = [...content.querySelectorAll(".rc-qte-refusee")].map(inp => parseInt(inp.value, 10));
+      const observations = [...content.querySelectorAll(".rc-observation")].map(inp => inp.value.trim());
+
+      if([...recues, ...acceptees, ...refusees].some(q => isNaN(q) || q < 0)){
+        errorBox.innerHTML = `<div class="error-box">Toutes les quantités doivent être des nombres positifs ou nuls.</div>`;
+        return;
+      }
+
+      // Recharge le stock le plus récent avant d'ajouter (concurrence avec d'autres élèves)
+      await loadModuleTable("stock");
+
+      for(let i = 0; i < r.lignes.length; i++){
+        const ligne = r.lignes[i];
+        ligne.qteRecue = recues[i];
+        ligne.qteAcceptee = acceptees[i];
+        ligne.qteRefusee = refusees[i];
+        ligne.observation = observations[i];
+
+        if(acceptees[i] > 0){
+          let stockRow = state.moduleData.stock.find(s => s.produit_ref === ligne.produit_ref && s.emplacement_code === ligne.emplacement_code);
+          if(stockRow){
+            stockRow.quantite = (parseInt(stockRow.quantite, 10) || 0) + acceptees[i];
+          } else {
+            stockRow = {
+              id: uid(), produit_ref: ligne.produit_ref, emplacement_code: ligne.emplacement_code,
+              quantite: acceptees[i], createdBy: state.currentUser.matricule, createdByNom: state.currentUser.nom
+            };
+            state.moduleData.stock.push(stockRow);
+          }
+          await fbPutItem(dbRefGroupe("stock"), stockRow);
+        }
+      }
+
+      r.statut = "receptionnee";
+      r.receptionedBy = state.currentUser.matricule;
+      r.receptionedByNom = state.currentUser.nom;
+      r.validatedAt = Date.now();
+      await fbPutItem(dbRefGroupe("receptions"), r);
+
+      showToast("Réception validée, stock mis à jour.");
+      render();
+    });
   }
 
   /* ============ RENDER : MODULE MESSAGERIE ============ */
@@ -1319,59 +2542,55 @@
     return m.from === "eleve" && m.matricule === state.currentUser.matricule;
   }
 
-  function bubbleHTML(m){
-    const roleLabel = m.from === "enseignant" ? "Enseignant" : (m.from === "bot" ? "Assistant" : (m.from === "client" ? `${m.authorNom} (Client)` : m.authorNom));
+  function senderLabelFor(m){
+    if(m.from === "enseignant") return "Enseignant";
+    if(m.from === "bot") return "Assistant";
+    if(m.from === "client") return `${m.authorNom} (Client)`;
+    return m.authorNom;
+  }
+
+  function isUnreadFor(m, viewerRole){
+    if(viewerRole === "eleve") return m.from !== "eleve" && !m.readByStudent;
+    return m.from === "eleve" && !m.readByTeacher;
+  }
+
+  function emailRowHTML(m, viewerRole){
+    const unread = isUnreadFor(m, viewerRole);
+    const sender = viewerRole === "eleve" && m.from === "eleve" ? "Moi" : senderLabelFor(m);
+    const dateLabel = new Date(m.timestamp).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+    const snippet = (m.body || "").replace(/\s+/g, " ").trim().slice(0, 90);
     return `
-      <div class="msg-row ${m.from}">
-        <div class="msg-bubble">
-          <div class="msg-meta">${roleLabel}${m.objetLabel ? ` · ${m.objetLabel}` : ""}${canDeleteMessage(m) ? ` <button class="msg-del" data-id="${m.id}" title="Supprimer">✕</button>` : ""}</div>
-          <div class="msg-body">${(m.body || "").replace(/</g,"&lt;")}</div>
-          <div class="msg-time">${new Date(m.timestamp).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })}</div>
+      <button class="mail-row ${unread ? "unread" : ""}" data-id="${m.id}">
+        <span class="mail-dot">${unread ? "●" : ""}</span>
+        <span class="mail-sender">${sender}</span>
+        <span class="mail-subject-line"><span class="mail-subject">${m.objetLabel || "(Sans objet)"}</span><span class="mail-snippet">${snippet}</span></span>
+        <span class="mail-date">${dateLabel}</span>
+      </button>
+    `;
+  }
+
+  function emailDetailHTML(m, viewerRole){
+    const sender = viewerRole === "eleve" && m.from === "eleve" ? `${m.authorNom} (vous)` : senderLabelFor(m);
+    const badgeClass = m.from === "client" ? "client" : (m.from === "bot" ? "bot" : "");
+    const dateLabel = new Date(m.timestamp).toLocaleString("fr-FR", { day:"2-digit", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    return `
+      <div class="mail-detail">
+        <div class="mail-detail-header">
+          <div class="mail-detail-subject">${m.objetLabel || "(Sans objet)"}</div>
+          <div class="mail-detail-meta">De : <strong>${sender}</strong>${badgeClass ? `<span class="mail-detail-badge ${badgeClass}">${m.from}</span>` : ""} · ${dateLabel}</div>
         </div>
+        <div class="mail-detail-body">${(m.body || "").replace(/</g,"&lt;")}</div>
       </div>
     `;
   }
 
-  async function deleteMessage(id, content, rerender){
-    if(!confirm("Supprimer ce message ?")) return;
-    state.messages = state.messages.filter(m => m.id !== id);
-    await saveMessages();
-    showToast("Message supprimé.");
-    rerender(content);
-  }
-
-  function wireBubbleDeletes(content, rerender){
-    content.querySelectorAll(".msg-del").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        deleteMessage(btn.dataset.id, content, rerender);
-      });
-    });
-  }
-
-  function composeHTML({ showObjet }){
-    return `
-      <div class="compose-box">
-        ${showObjet ? `
-          <label for="msgObjet">Objet</label>
-          <select id="msgObjet">${OBJETS.map(o => `<option value="${o.key}">${o.label}</option>`).join("")}</select>
-        ` : ""}
-        <label for="msgBody">Message</label>
-        <textarea id="msgBody" rows="3" placeholder="Écrivez votre message…"></textarea>
-        <div id="msgError"></div>
-        <button class="btn btn-primary" id="sendBtn" style="width:auto;">Envoyer</button>
-      </div>
-    `;
-  }
-
-  async function markThreadRead(matricule, viewerRole){
-    let changed = false;
-    state.messages.forEach(m => {
-      if(m.matricule !== matricule) return;
-      if(viewerRole === "eleve" && !m.readByStudent){ m.readByStudent = true; changed = true; }
-      if(viewerRole === "enseignant" && !m.readByTeacher){ m.readByTeacher = true; changed = true; }
-    });
-    if(changed) await saveMessages();
+  // Marque UN SEUL message comme lu (pas tout le fil), comme dans une vraie messagerie.
+  async function markMessageRead(id, viewerRole){
+    const field = viewerRole === "eleve" ? "readByStudent" : "readByTeacher";
+    const m = state.messages.find(x => x.id === id);
+    if(!m || m[field]) return;
+    m[field] = true;
+    await fbUpdatePaths(dbRefGroupe("messages"), { [`${id}/${field}`]: true });
   }
 
   function renderMessagerie(content){
@@ -1384,58 +2603,142 @@
 
   async function renderMessagerieEleve(content){
     const matricule = state.currentUser.matricule;
-    const thread = threadFor(matricule);
+    const thread = threadFor(matricule).slice().reverse(); // plus récent en premier, comme une boîte de réception
 
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
-      <div class="panel">
-        <h2>Messagerie — ${state.currentUser.nom}</h2>
-        <div class="thread-scroll" id="threadScroll">
-          ${thread.length === 0 ? `<div class="empty-state"><strong>Aucun message</strong>Envoyez votre premier message à votre enseignant ci-dessous.</div>` : thread.map(bubbleHTML).join("")}
+      <div class="panel mail-panel">
+        <div class="mail-toolbar">
+          <h2>Messagerie — ${state.currentUser.nom}</h2>
+          <button class="btn btn-primary" id="newMsgBtn" style="width:auto;">Nouveau message</button>
         </div>
-        ${composeHTML({ showObjet: true })}
-        <div class="info-box" style="margin-top:14px;">Selon l'objet choisi, un premier retour peut être automatique (assistant). Votre enseignant voit tous vos messages et peut vous répondre directement.</div>
+        <div id="mailBody"></div>
       </div>
     `;
-
     document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
-    const scrollBox = document.getElementById("threadScroll");
-    scrollBox.scrollTop = scrollBox.scrollHeight;
-    wireBubbleDeletes(content, renderMessagerieEleve);
-    await markThreadRead(matricule, "eleve");
-
-    document.getElementById("sendBtn").addEventListener("click", async () => {
-      const objetKey = document.getElementById("msgObjet").value;
-      const body = document.getElementById("msgBody").value.trim();
-      const errorBox = document.getElementById("msgError");
-      errorBox.innerHTML = "";
-      if(!body){
-        errorBox.innerHTML = `<div class="error-box">Écrivez un message avant d'envoyer.</div>`;
-        return;
-      }
-      const objetLabel = OBJETS.find(o => o.key === objetKey).label;
-      const sendBtn = document.getElementById("sendBtn");
-      sendBtn.disabled = true;
-      sendBtn.textContent = "Envoi…";
-
-      state.messages.push({
-        id: uid(), matricule, from: "eleve", authorNom: state.currentUser.nom,
-        objetKey, objetLabel, body, timestamp: Date.now(),
-        readByStudent: true, readByTeacher: false
-      });
-      await saveMessages();
-
-      const botReply = await getBotReply(objetKey, body);
-      state.messages.push({
-        id: uid(), matricule, from: "bot", authorNom: "Assistant",
-        objetLabel: "Réponse automatique", body: botReply, timestamp: Date.now(),
-        readByStudent: true, readByTeacher: true
-      });
-      await saveMessages();
-
-      showToast("Message envoyé.");
+    document.getElementById("newMsgBtn").addEventListener("click", () => {
+      state.mailView = "compose";
+      state.openMessageId = null;
       renderMessagerieEleve(content);
     });
+
+    const mailBody = document.getElementById("mailBody");
+
+    if(state.mailView === "compose" || state.mailView === "reply"){
+      drawCompose();
+    } else if(state.mailView === "detail" && state.openMessageId){
+      drawDetail();
+    } else {
+      drawList();
+    }
+
+    function drawList(){
+      mailBody.innerHTML = thread.length === 0
+        ? `<div class="mail-empty"><strong>Boîte de réception vide</strong>Envoyez votre premier message avec « Nouveau message ».</div>`
+        : `<div class="mail-list">${thread.map(m => emailRowHTML(m, "eleve")).join("")}</div>`;
+      mailBody.querySelectorAll(".mail-row").forEach(row => {
+        row.addEventListener("click", async () => {
+          state.openMessageId = row.dataset.id;
+          state.mailView = "detail";
+          await markMessageRead(state.openMessageId, "eleve");
+          renderMessagerieEleve(content);
+        });
+      });
+    }
+
+    function drawDetail(){
+      const m = thread.find(x => x.id === state.openMessageId);
+      if(!m){ state.mailView = "list"; renderMessagerieEleve(content); return; }
+      mailBody.innerHTML = `
+        <div class="mail-back"><button class="back-link" id="backToList">&larr; Retour à la boîte de réception</button></div>
+        ${emailDetailHTML(m, "eleve")}
+        <div class="mail-detail-actions">
+          ${m.from !== "eleve" ? `<button class="btn btn-primary" id="replyBtn" style="width:auto;">Répondre</button>` : ""}
+          ${canDeleteMessage(m) ? `<button class="btn-danger" id="deleteMailBtn">Supprimer</button>` : ""}
+        </div>
+      `;
+      document.getElementById("backToList").addEventListener("click", () => {
+        state.mailView = "list"; state.openMessageId = null; renderMessagerieEleve(content);
+      });
+      const replyBtn = document.getElementById("replyBtn");
+      if(replyBtn) replyBtn.addEventListener("click", () => { state.mailView = "reply"; renderMessagerieEleve(content); });
+      const deleteMailBtn = document.getElementById("deleteMailBtn");
+      if(deleteMailBtn) deleteMailBtn.addEventListener("click", async () => {
+        if(!confirm("Supprimer ce message ?")) return;
+        const ok = await fbRemoveItem(dbRefGroupe("messages"), m.id);
+        if(!ok) return;
+        state.messages = state.messages.filter(x => x.id !== m.id);
+        state.mailView = "list"; state.openMessageId = null;
+        showToast("Message supprimé.");
+        renderMessagerieEleve(content);
+      });
+    }
+
+    function drawCompose(){
+      const isReply = state.mailView === "reply";
+      const original = isReply ? thread.find(x => x.id === state.openMessageId) : null;
+      mailBody.innerHTML = `
+        <div class="mail-back"><button class="back-link" id="cancelCompose">&larr; ${isReply ? "Annuler la réponse" : "Annuler"}</button></div>
+        <div class="compose-box">
+          ${isReply ? `<div class="mail-detail-meta" style="margin-bottom:12px;">En réponse à : <strong>${original.objetLabel || "(Sans objet)"}</strong> (${senderLabelFor(original)})</div>` : `
+            <label for="msgObjet">Objet</label>
+            <select id="msgObjet">${OBJETS.map(o => `<option value="${o.key}">${o.label}</option>`).join("")}</select>
+          `}
+          <label for="msgBody">Message</label>
+          <textarea id="msgBody" rows="6" placeholder="Écrivez votre message…"></textarea>
+          <div id="msgError"></div>
+          <button class="btn btn-primary" id="sendBtn" style="width:auto; margin-top:14px;">Envoyer</button>
+          ${!isReply ? `<div class="info-box" style="margin-top:16px;">Selon l'objet choisi, un premier retour peut être automatique (assistant). Votre enseignant voit tous vos messages et peut vous répondre directement.</div>` : ""}
+        </div>
+      `;
+      document.getElementById("cancelCompose").addEventListener("click", () => {
+        state.mailView = isReply ? "detail" : "list";
+        renderMessagerieEleve(content);
+      });
+
+      document.getElementById("sendBtn").addEventListener("click", async () => {
+        const body = document.getElementById("msgBody").value.trim();
+        const errorBox = document.getElementById("msgError");
+        errorBox.innerHTML = "";
+        if(!body){
+          errorBox.innerHTML = `<div class="error-box">Écrivez un message avant d'envoyer.</div>`;
+          return;
+        }
+        const objetKey = isReply ? (original.objetKey || "autre") : document.getElementById("msgObjet").value;
+        const objetLabel = isReply
+          ? (original.objetLabel && original.objetLabel.startsWith("Ré : ") ? original.objetLabel : `Ré : ${original.objetLabel || "(Sans objet)"}`)
+          : OBJETS.find(o => o.key === objetKey).label;
+        const sendBtn = document.getElementById("sendBtn");
+        sendBtn.disabled = true;
+        sendBtn.textContent = "Envoi…";
+
+        const eleveMsg = {
+          id: uid(), matricule, from: "eleve", authorNom: state.currentUser.nom,
+          objetKey, objetLabel, body, timestamp: Date.now(),
+          readByStudent: true, readByTeacher: false
+        };
+        state.messages.push(eleveMsg);
+        await fbPutItem(dbRefGroupe("messages"), eleveMsg);
+
+        // La réponse automatique du bot n'intervient que pour un nouveau message, pas pour une réponse
+        // à l'enseignant ou à un client (on ne veut pas d'un bot qui répond à la place de l'humain).
+        if(!isReply){
+          const botReply = await getBotReply(objetKey, body);
+          const botMsg = {
+            id: uid(), matricule, from: "bot", authorNom: "Assistant",
+            objetLabel: "Réponse automatique", body: botReply, timestamp: Date.now(),
+            readByStudent: true, readByTeacher: true
+          };
+          state.messages.push(botMsg);
+          await fbPutItem(dbRefGroupe("messages"), botMsg);
+        }
+
+        showToast("Message envoyé.");
+        state.mailView = "list";
+        state.openMessageId = null;
+        renderMessagerieEleve(content);
+      });
+    }
   }
 
   function renderMessagerieEnseignant(content){
@@ -1454,7 +2757,7 @@
     }).join("");
 
     const activeStudent = students.find(s => s.matricule === state.activeThreadMatricule);
-    const thread = activeStudent ? threadFor(activeStudent.matricule) : [];
+    const thread = activeStudent ? threadFor(activeStudent.matricule).slice().reverse() : [];
 
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
@@ -1473,11 +2776,18 @@
           <div id="orderLines"></div>
           <button class="btn-ghost" id="addOrderLineBtn" style="margin-top:8px;">+ Ajouter un produit</button>
 
-          <label for="orderRecipient" style="margin-top:14px;">Destinataire</label>
-          <select id="orderRecipient">
-            <option value="__all__">Toute la classe</option>
-            ${students.map(s => `<option value="${s.matricule}">${s.nom} (${s.matricule})</option>`).join("")}
-          </select>
+          <label style="margin-top:14px;">Destinataire(s)</label>
+          <div class="recipient-box" id="recipientBox">
+            <label class="recipient-item recipient-all">
+              <input type="checkbox" id="recipientAll" /> <strong>Toute la classe</strong> (${students.length} élève${students.length > 1 ? "s" : ""})
+            </label>
+            <div class="recipient-divider"></div>
+            ${students.map(s => `
+              <label class="recipient-item">
+                <input type="checkbox" class="recipient-student" value="${s.matricule}" /> ${s.nom} <span class="hint">(${s.matricule})</span>
+              </label>
+            `).join("")}
+          </div>
 
           <div id="orderError"></div>
           <button class="btn btn-primary" id="generateOrderBtn" style="width:auto;">Générer et envoyer la commande</button>
@@ -1485,11 +2795,11 @@
       </div>
       <div class="panel" style="margin-bottom:16px;">
         <h2>Message à toute la classe</h2>
-        <div class="compose-box" style="border-top:none; padding-top:0;">
+        <div class="compose-box" style="padding:0;">
           <label for="broadcastBody">Message envoyé à chaque élève</label>
           <textarea id="broadcastBody" rows="2" placeholder="ex : N'oubliez pas d'apporter votre carnet de stage demain."></textarea>
           <div id="broadcastError"></div>
-          <button class="btn btn-primary" id="broadcastBtn" style="width:auto;">Envoyer à tous les élèves (${students.length})</button>
+          <button class="btn btn-primary" id="broadcastBtn" style="width:auto; margin-top:10px;">Envoyer à tous les élèves (${students.length})</button>
         </div>
       </div>
       <main class="board messagerie-board">
@@ -1497,14 +2807,14 @@
           <h2>Élèves</h2>
           <div class="thread-list">${listHTML || `<div class="empty-state">Aucun élève enregistré.</div>`}</div>
         </section>
-        <section class="panel">
+        <section class="panel mail-panel">
           ${activeStudent ? `
-            <h2>${activeStudent.nom} — ${activeStudent.matricule}</h2>
-            <div class="thread-scroll" id="threadScroll">
-              ${thread.length === 0 ? `<div class="empty-state">Aucun message pour l'instant.</div>` : thread.map(bubbleHTML).join("")}
+            <div class="mail-toolbar">
+              <h2>${activeStudent.nom} — ${activeStudent.matricule}</h2>
+              <button class="btn btn-primary" id="newMsgBtn" style="width:auto;">Nouveau message</button>
             </div>
-            ${composeHTML({ showObjet: false })}
-          ` : `<div class="empty-state"><strong>Sélectionnez un élève</strong>Choisissez un élève dans la liste pour voir la conversation.</div>`}
+            <div id="mailBody"></div>
+          ` : `<div class="mail-empty"><strong>Sélectionnez un élève</strong>Choisissez un élève dans la liste pour voir sa messagerie.</div>`}
         </section>
       </main>
     `;
@@ -1540,6 +2850,12 @@
 
       document.getElementById("addOrderLineBtn").addEventListener("click", addOrderLine);
 
+      const recipientAll = document.getElementById("recipientAll");
+      const studentCheckboxes = [...document.querySelectorAll(".recipient-student")];
+      recipientAll.addEventListener("change", () => {
+        studentCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = recipientAll.checked; });
+      });
+
       document.getElementById("generateOrderBtn").addEventListener("click", async () => {
         const errorBox = document.getElementById("orderError");
         errorBox.innerHTML = "";
@@ -1555,21 +2871,25 @@
           errorBox.innerHTML = `<div class="error-box">Chaque ligne doit avoir une quantité d'au moins 1.</div>`;
           return;
         }
-        const recipientValue = document.getElementById("orderRecipient").value;
-        const recipients = recipientValue === "__all__" ? students.map(s => s.matricule) : [recipientValue];
+        const recipients = recipientAll.checked
+          ? students.map(s => s.matricule)
+          : studentCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
+        if(recipients.length === 0){
+          errorBox.innerHTML = `<div class="error-box">Sélectionnez au moins un destinataire.</div>`;
+          return;
+        }
 
         const linesText = lines.map(l => `- ${l.ref} x ${l.qte} — ${l.designation}`).join("\n");
         const body = `Bonjour,\n\nMerci de bien vouloir préparer la commande suivante :\n\n${linesText}\n\n${client.adresse ? `Adresse de livraison : ${client.adresse}\n` : ""}Merci de nous confirmer la prise en charge.\n\nCordialement,\n${client.nom}${client.contact ? `\n${client.contact}` : ""}`;
 
         const ts = Date.now();
-        recipients.forEach(matricule => {
-          state.messages.push({
-            id: uid(), matricule, from: "client", authorNom: client.nom,
-            objetLabel: "Commande client", body, timestamp: ts,
-            readByStudent: false, readByTeacher: true
-          });
-        });
-        await saveMessages();
+        const newMsgs = recipients.map(matricule => ({
+          id: uid(), matricule, from: "client", authorNom: client.nom,
+          objetLabel: "Commande client", body, timestamp: ts,
+          readByStudent: false, readByTeacher: true
+        }));
+        newMsgs.forEach(m => state.messages.push(m));
+        await fbMergeItems(dbRefGroupe("messages"), newMsgs);
         showToast(`Commande envoyée à ${recipients.length} élève(s).`);
         renderMessagerieEnseignant(content);
       });
@@ -1587,32 +2907,104 @@
       btn.disabled = true;
       btn.textContent = "Envoi…";
       const ts = Date.now();
-      students.forEach(s => {
-        state.messages.push({
-          id: uid(), matricule: s.matricule, from: "enseignant", authorNom: state.currentUser.nom,
-          objetLabel: "Message de l'enseignant (à toute la classe)", body, timestamp: ts,
-          readByStudent: false, readByTeacher: true
-        });
-      });
-      await saveMessages();
+      const newMsgs = students.map(s => ({
+        id: uid(), matricule: s.matricule, from: "enseignant", authorNom: state.currentUser.nom,
+        objetLabel: "Message de l'enseignant (à toute la classe)", body, timestamp: ts,
+        readByStudent: false, readByTeacher: true
+      }));
+      newMsgs.forEach(m => state.messages.push(m));
+      await fbMergeItems(dbRefGroupe("messages"), newMsgs);
       showToast(`Message envoyé à ${students.length} élève(s).`);
       renderMessagerieEnseignant(content);
     });
 
     content.querySelectorAll(".thread-item").forEach(btn => {
-      btn.addEventListener("click", async () => {
+      btn.addEventListener("click", () => {
         state.activeThreadMatricule = btn.dataset.matricule;
-        await markThreadRead(state.activeThreadMatricule, "enseignant");
+        state.mailView = "list";
+        state.openMessageId = null;
         renderMessagerieEnseignant(content);
       });
     });
 
-    if(activeStudent){
-      const scrollBox = document.getElementById("threadScroll");
-      if(scrollBox) scrollBox.scrollTop = scrollBox.scrollHeight;
-      markThreadRead(activeStudent.matricule, "enseignant");
-      wireBubbleDeletes(content, renderMessagerieEnseignant);
+    if(!activeStudent) return;
 
+    document.getElementById("newMsgBtn").addEventListener("click", () => {
+      state.mailView = "compose";
+      state.openMessageId = null;
+      renderMessagerieEnseignant(content);
+    });
+
+    const mailBody = document.getElementById("mailBody");
+
+    if(state.mailView === "compose" || state.mailView === "reply"){
+      drawComposeTeacher();
+    } else if(state.mailView === "detail" && state.openMessageId){
+      drawDetailTeacher();
+    } else {
+      drawListTeacher();
+    }
+
+    function drawListTeacher(){
+      mailBody.innerHTML = thread.length === 0
+        ? `<div class="mail-empty"><strong>Aucun message</strong>Envoyez un message avec « Nouveau message ».</div>`
+        : `<div class="mail-list">${thread.map(m => emailRowHTML(m, "enseignant")).join("")}</div>`;
+      mailBody.querySelectorAll(".mail-row").forEach(row => {
+        row.addEventListener("click", async () => {
+          state.openMessageId = row.dataset.id;
+          state.mailView = "detail";
+          await markMessageRead(state.openMessageId, "enseignant");
+          renderMessagerieEnseignant(content);
+        });
+      });
+    }
+
+    function drawDetailTeacher(){
+      const m = thread.find(x => x.id === state.openMessageId);
+      if(!m){ state.mailView = "list"; renderMessagerieEnseignant(content); return; }
+      mailBody.innerHTML = `
+        <div class="mail-back"><button class="back-link" id="backToList">&larr; Retour à la liste</button></div>
+        ${emailDetailHTML(m, "enseignant")}
+        <div class="mail-detail-actions">
+          <button class="btn btn-primary" id="replyBtn" style="width:auto;">Répondre</button>
+          ${canDeleteMessage(m) ? `<button class="btn-danger" id="deleteMailBtn">Supprimer</button>` : ""}
+        </div>
+      `;
+      document.getElementById("backToList").addEventListener("click", () => {
+        state.mailView = "list"; state.openMessageId = null; renderMessagerieEnseignant(content);
+      });
+      document.getElementById("replyBtn").addEventListener("click", () => {
+        state.mailView = "reply"; renderMessagerieEnseignant(content);
+      });
+      const deleteMailBtn = document.getElementById("deleteMailBtn");
+      if(deleteMailBtn) deleteMailBtn.addEventListener("click", async () => {
+        if(!confirm("Supprimer ce message ?")) return;
+        const ok = await fbRemoveItem(dbRefGroupe("messages"), m.id);
+        if(!ok) return;
+        state.messages = state.messages.filter(x => x.id !== m.id);
+        state.mailView = "list"; state.openMessageId = null;
+        showToast("Message supprimé.");
+        renderMessagerieEnseignant(content);
+      });
+    }
+
+    function drawComposeTeacher(){
+      const isReply = state.mailView === "reply";
+      const original = isReply ? thread.find(x => x.id === state.openMessageId) : null;
+      mailBody.innerHTML = `
+        <div class="mail-back"><button class="back-link" id="cancelCompose">&larr; ${isReply ? "Annuler la réponse" : "Annuler"}</button></div>
+        <div class="compose-box">
+          ${isReply ? `<div class="mail-detail-meta" style="margin-bottom:12px;">En réponse à : <strong>${original.objetLabel || "(Sans objet)"}</strong></div>` : ""}
+          <label for="msgBody">Message</label>
+          <textarea id="msgBody" rows="6" placeholder="Écrivez votre message…"></textarea>
+          <div id="msgError"></div>
+          <button class="btn btn-primary" id="sendBtn" style="width:auto; margin-top:14px;">Envoyer</button>
+        </div>
+      `;
+      document.getElementById("cancelCompose").addEventListener("click", () => {
+        state.mailView = isReply ? "detail" : "list";
+        renderMessagerieEnseignant(content);
+      });
       document.getElementById("sendBtn").addEventListener("click", async () => {
         const body = document.getElementById("msgBody").value.trim();
         const errorBox = document.getElementById("msgError");
@@ -1621,13 +3013,19 @@
           errorBox.innerHTML = `<div class="error-box">Écrivez un message avant d'envoyer.</div>`;
           return;
         }
-        state.messages.push({
+        const objetLabel = isReply
+          ? (original.objetLabel && original.objetLabel.startsWith("Ré : ") ? original.objetLabel : `Ré : ${original.objetLabel || "(Sans objet)"}`)
+          : "Message de l'enseignant";
+        const msg = {
           id: uid(), matricule: activeStudent.matricule, from: "enseignant", authorNom: state.currentUser.nom,
-          objetLabel: "Message de l'enseignant", body, timestamp: Date.now(),
+          objetLabel, body, timestamp: Date.now(),
           readByStudent: false, readByTeacher: true
-        });
-        await saveMessages();
+        };
+        state.messages.push(msg);
+        await fbPutItem(dbRefGroupe("messages"), msg);
         showToast("Message envoyé.");
+        state.mailView = "list";
+        state.openMessageId = null;
         renderMessagerieEnseignant(content);
       });
     }
