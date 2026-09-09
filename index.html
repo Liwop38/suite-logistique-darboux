@@ -154,14 +154,38 @@
   }
 
   /* ---- Menu ---- */
+  .menu-header-row{ display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; }
   .menu-intro h1{ font-family: var(--display); font-size: clamp(24px,4vw,36px); margin: 4px 0 6px; }
   .menu-intro p{ color: var(--ink-soft); font-size: 14px; max-width: 60ch; margin: 0 0 26px; }
+  .menu-illustration{ flex: 0 0 auto; width: 115px; height: auto; }
+  .menu-illustration svg{ width:100%; height:100%; }
+  @media (max-width: 640px){ .menu-illustration{ display:none; } }
+
+  .admin-tile-row{ margin-bottom: 18px; max-width: 320px; }
+
+  .section-heading{
+    display:flex; align-items:center; gap:12px;
+    margin: 30px 0 14px;
+  }
+  .section-heading span{
+    font-family: var(--display); font-size: 15px; letter-spacing: 0.03em;
+    color: var(--steel); text-transform: uppercase;
+  }
+  .section-heading::after{
+    content:""; flex:1 1 auto; height:1px; background: var(--line);
+  }
 
   .module-grid{
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(230px,1fr));
     gap: 14px;
   }
+  .module-grid-2col{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 640px){ .module-grid-2col{ grid-template-columns: 1fr; } }
   .module-tile{
     position: relative;
     text-align:left;
@@ -549,14 +573,16 @@
   ];
 
   const MODULES = [
-    { id: "magasin", code: "M-01", title: "Base du magasin pédagogique", desc: "Produits, emplacements, fournisseurs et stock.", ready: true },
-    { id: "messagerie", code: "M-02", title: "Messagerie", desc: "Contactez votre enseignant, avec un premier retour automatique selon l'objet.", ready: true },
-    { id: "picking", code: "M-03", title: "Préparation de commandes", desc: "Sélectionnez les produits, imprimez le bon, validez le prélèvement en stock.", ready: true },
-    { id: "reception", code: "M-04", title: "Réception de commande", desc: "Contrôlez une livraison, imprimez le bon de contrôle, mettez à jour le stock.", ready: true },
-    { id: "excel", code: "M-05", title: "Apprendre Excel pas à pas", desc: "6 étapes progressives avec fichiers pratiques, sur des cas de logistique.", ready: true },
-    { id: "pole3", code: "M-06", title: "Pôle 3 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C3.1 à C3.4).", ready: true },
-    { id: "brasserie", code: "M-07", title: "Étude de cas — Brasseries du Gâtinais", desc: "Palettisation, mise en stock et adressage — exercice complet noté.", ready: true },
-    { id: "transport", code: "M-08", title: "Transport & tournées", desc: "Bientôt disponible.", ready: false }
+    { id: "magasin", code: "M-01", title: "Base du magasin pédagogique", desc: "Produits, emplacements, fournisseurs et stock.", ready: true, category: "operations" },
+    { id: "messagerie", code: "M-02", title: "Messagerie", desc: "Contactez votre enseignant, avec un premier retour automatique selon l'objet.", ready: true, category: "operations" },
+    { id: "picking", code: "M-03", title: "Préparation de commandes", desc: "Sélectionnez les produits, imprimez le bon, validez le prélèvement en stock.", ready: true, category: "operations" },
+    { id: "reception", code: "M-04", title: "Réception de commande", desc: "Contrôlez une livraison, imprimez le bon de contrôle, mettez à jour le stock.", ready: true, category: "operations" },
+    { id: "transport", code: "M-08", title: "Transport & tournées", desc: "Bientôt disponible.", ready: false, category: "operations" },
+    { id: "excel", code: "M-05", title: "Apprendre Excel pas à pas", desc: "6 étapes progressives avec fichiers pratiques, sur des cas de logistique.", ready: true, category: "cours" },
+    { id: "pole3", code: "M-06", title: "Pôle 3 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C3.1 à C3.4).", ready: true, category: "cours" },
+    { id: "brasserie", code: "M-07", title: "Étude de cas — Brasseries du Gâtinais", desc: "Palettisation, mise en stock et adressage — exercice complet noté.", ready: true, category: "cours" },
+    { id: "pole1", code: "PÔLE 1", title: "Pôle 1", desc: "Bientôt disponible.", ready: false, category: "cours" },
+    { id: "pole2", code: "PÔLE 2", title: "Pôle 2", desc: "Bientôt disponible.", ready: false, category: "cours" }
   ];
 
   const GROUPES = ["1L1", "1L2", "2BGATL1", "2BGATL2", "TCAPOL2"];
@@ -1416,30 +1442,69 @@
     const unread = await computeUnreadForMenu();
     const noGroupe = state.currentUser.role === "eleve" && !state.currentUser.groupe;
 
-    const tiles = MODULES.map(m => `
-      <button class="module-tile ${m.ready && !noGroupe ? "" : "disabled"}" data-module="${m.id}" ${m.ready && !noGroupe ? "" : "disabled"}>
-        ${m.id === "messagerie" && unread ? `<span class="tile-badge" title="Nouveau message"></span>` : ""}
-        <span class="code">${m.code}</span>
-        <div class="title">${m.title}</div>
-        <div class="desc">${m.desc}</div>
-      </button>
-    `).join("");
+    function tileHTML(m){
+      return `
+        <button class="module-tile ${m.ready && !noGroupe ? "" : "disabled"}" data-module="${m.id}" ${m.ready && !noGroupe ? "" : "disabled"}>
+          ${m.id === "messagerie" && unread ? `<span class="tile-badge" title="Nouveau message"></span>` : ""}
+          <span class="code">${m.code}</span>
+          <div class="title">${m.title}</div>
+          <div class="desc">${m.desc}</div>
+        </button>
+      `;
+    }
+
+    const operationsTiles = MODULES.filter(m => m.category === "operations").map(tileHTML).join("");
+    const coursTiles = MODULES.filter(m => m.category === "cours").map(tileHTML).join("");
 
     const adminTile = state.currentUser.role === "enseignant" ? `
-      <button class="module-tile admin" id="adminTile">
-        <span class="code">ADMIN</span>
-        <div class="title">Gestion des comptes</div>
-        <div class="desc">Ajouter, modifier ou retirer des comptes élèves.</div>
-      </button>
+      <div class="admin-tile-row">
+        <button class="module-tile admin" id="adminTile">
+          <span class="code">ADMIN</span>
+          <div class="title">Gestion des comptes</div>
+          <div class="desc">Ajouter, modifier ou retirer des comptes élèves.</div>
+        </button>
+      </div>
     ` : "";
 
     content.innerHTML = `
       <div class="menu-intro">
-        <h1>Bonjour ${state.currentUser.nom.split(" ")[0] || state.currentUser.nom}</h1>
-        <p>Choisissez un module pour vous entraîner sur les problématiques logistiques de la classe.</p>
+        <div class="menu-header-row">
+          <div>
+            <h1>Bonjour ${state.currentUser.nom.split(" ")[0] || state.currentUser.nom}</h1>
+            <p>Choisissez un module pour vous entraîner sur les problématiques logistiques de la classe.</p>
+          </div>
+          <div class="menu-illustration" aria-hidden="true">
+            <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+              <rect x="18" y="160" width="14" height="14" fill="#211f1a"/>
+              <rect x="93" y="160" width="14" height="14" fill="#211f1a"/>
+              <rect x="168" y="160" width="14" height="14" fill="#211f1a"/>
+              <rect x="10" y="142" width="180" height="9" rx="1.5" fill="#211f1a"/>
+              <rect x="10" y="153" width="180" height="9" rx="1.5" fill="#211f1a"/>
+
+              <rect x="25" y="66" width="66" height="76" fill="#e8c99b" stroke="#211f1a" stroke-width="3"/>
+              <line x1="25" y1="80" x2="91" y2="80" stroke="#211f1a" stroke-width="2"/>
+              <line x1="58" y1="66" x2="58" y2="142" stroke="#211f1a" stroke-width="1.5" opacity="0.5"/>
+
+              <rect x="102" y="78" width="58" height="64" fill="#d8b478" stroke="#211f1a" stroke-width="3"/>
+              <line x1="102" y1="91" x2="160" y2="91" stroke="#211f1a" stroke-width="2"/>
+              <line x1="131" y1="78" x2="131" y2="142" stroke="#211f1a" stroke-width="1.5" opacity="0.5"/>
+
+              <rect x="52" y="94" width="78" height="50" fill="#d9530f" stroke="#211f1a" stroke-width="3"/>
+              <line x1="52" y1="106" x2="130" y2="106" stroke="#211f1a" stroke-width="2"/>
+              <rect x="76" y="115" width="30" height="18" fill="#fdf6ee" stroke="#211f1a" stroke-width="1.5"/>
+              <line x1="80" y1="121" x2="102" y2="121" stroke="#a83e0a" stroke-width="1.5"/>
+              <line x1="80" y1="126" x2="96" y2="126" stroke="#a83e0a" stroke-width="1.5"/>
+            </svg>
+          </div>
+        </div>
       </div>
       ${noGroupe ? `<div class="error-box" style="margin-bottom:18px;">Votre compte n'est pas encore rattaché à un groupe. Contactez votre enseignant.</div>` : ""}
-      <div class="module-grid">${adminTile}${tiles}</div>
+      ${adminTile}
+      <div class="module-grid-2col">${operationsTiles}</div>
+
+      <div class="section-heading"><span>Cours</span></div>
+      <div class="module-grid">${coursTiles}</div>
+
       <footer class="site-footer">Lycée professionnel Gaston Darboux — 7 rue Jules Raimu, Nîmes · Bac Pro Métiers de la Logistique</footer>
     `;
 
