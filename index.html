@@ -496,6 +496,30 @@
   }
   .chip-remove-btn:hover{ background: #fbeceb; color: #a5291b; }
 
+  /* ---- Module Transport : agenda visuel ---- */
+  .transport-toolbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:16px;
+  }
+  .transport-toolbar input[type="date"]{ max-width:170px; }
+  .transport-hours{ display:grid; grid-template-columns: 160px 1fr; margin-bottom: 6px; }
+  .transport-hours-track{ position:relative; height: 20px; }
+  .transport-hours-track span{
+    position:absolute; top:0; font-size: 11px; color: var(--ink-soft); transform: translateX(-50%);
+  }
+  .transport-row{ display:grid; grid-template-columns: 160px 1fr; align-items:center; border-top:1px solid var(--line); }
+  .transport-row:first-of-type{ border-top:none; }
+  .transport-row-label{ padding: 10px 10px 10px 0; font-size:13px; font-weight:600; color: var(--ink); }
+  .transport-track{
+    position:relative; height: 46px; background:
+      repeating-linear-gradient(to right, #f1efe9 0, #f1efe9 1px, transparent 1px, transparent calc(100%/7));
+  }
+  .transport-slot{
+    position:absolute; top:6px; height:34px; background: #eef3f4; border:1.5px solid var(--steel);
+    border-radius:6px; font-size:11px; color: var(--steel); font-weight:700; display:flex; align-items:center;
+    padding: 0 6px; overflow:hidden; white-space:nowrap; cursor:default;
+  }
+  .transport-slot.conflict{ background:#fbeceb; border-color:#c0392b; color:#a5291b; }
+
   /* ---- Calculatrice flottante ---- */
   #floatingCalculatorRoot{ position: fixed; right: 20px; bottom: 20px; z-index: 500; }
   .calc-fab{
@@ -650,7 +674,7 @@
     { id: "messagerie", code: "M-02", title: "Messagerie", desc: "Contactez votre enseignant, avec un premier retour automatique selon l'objet.", ready: true, category: "operations" },
     { id: "picking", code: "M-03", title: "Préparation de commandes", desc: "Sélectionnez les produits, imprimez le bon, validez le prélèvement en stock.", ready: true, category: "operations" },
     { id: "reception", code: "M-04", title: "Réception de commande", desc: "Contrôlez une livraison, imprimez le bon de contrôle, mettez à jour le stock.", ready: true, category: "operations" },
-    { id: "transport", code: "M-08", title: "Transport & tournées", desc: "Bientôt disponible.", ready: false, category: "operations" },
+    { id: "transport", code: "M-08", title: "Transport & tournées", desc: "Agenda des créneaux : temps fixe/variable, disponibilités personnel et transporteurs.", ready: true, category: "operations" },
     { id: "excel", code: "M-05", title: "Apprendre Excel pas à pas", desc: "6 étapes progressives avec fichiers pratiques, sur des cas de logistique.", ready: true, category: "cours" },
     { id: "pole1", code: "M-09", title: "Pôle 1 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C1.1 à C1.6).", ready: true, category: "cours" },
     { id: "pole2", code: "M-10", title: "Pôle 2 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C2.1 à C2.6).", ready: true, category: "cours" },
@@ -1990,7 +2014,8 @@ const CALCUL_TEMPLATES = {
     activeModule: null,
     activeTable: "produits",
     editingRowId: null,
-    moduleData: { produits: [], emplacements: [], fournisseurs: [], stock: [], clients: [] },
+    moduleData: { produits: [], emplacements: [], fournisseurs: [], stock: [], clients: [], transporteursT: [], personnelT: [], typesOperationT: [], camionsT: [] },
+    creneauxT: [],
     messages: [],
     activeThreadMatricule: null,
     mailView: "list",       // list | detail | compose | reply
@@ -2028,6 +2053,10 @@ const CALCUL_TEMPLATES = {
     quizAnswered: false,
     entrainementScores: {},
     entrainementAllScores: {},
+    transportView: "agenda",      // agenda | nouveau | referentiels
+    transportRefTab: "transporteurs", // transporteurs | personnel | types
+    transportDate: null,          // "YYYY-MM-DD", initialisé au chargement du module
+    transportConflictPreview: null,
     botTyping: false,
     loginError: "",
     setupError: "",
@@ -2802,6 +2831,122 @@ const CALCUL_TEMPLATES = {
     return shuffleInPlace(qs);
   }
 
+  /* ============ MODULE TRANSPORT — logique et données ============ */
+  function todayISO(){
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+
+  function timeToMinutes(hhmm){
+    if(!hhmm) return 0;
+    const [h, m] = hhmm.split(":").map(Number);
+    return (h || 0) * 60 + (m || 0);
+  }
+  function minutesToTime(mins){
+    mins = Math.max(0, Math.round(mins));
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+  }
+  function formatDureeMin(mins){
+    mins = Math.round(mins);
+    const h = Math.floor(mins / 60), m = mins % 60;
+    if(h === 0) return `${m} min`;
+    if(m === 0) return `${h} h`;
+    return `${h} h ${String(m).padStart(2,"0")}`;
+  }
+
+  async function loadTransportData(){
+    try{ state.moduleData.transporteursT = await fbGetAll(dbRefGroupe("transporteursT")); }
+    catch(e){ state.moduleData.transporteursT = []; }
+    try{ state.moduleData.personnelT = await fbGetAll(dbRefGroupe("personnelT")); }
+    catch(e){ state.moduleData.personnelT = []; }
+    try{ state.moduleData.typesOperationT = await fbGetAll(dbRefGroupe("typesOperationT")); }
+    catch(e){ state.moduleData.typesOperationT = []; }
+    try{ state.moduleData.camionsT = await fbGetAll(dbRefGroupe("camionsT")); }
+    catch(e){ state.moduleData.camionsT = []; }
+    try{ state.creneauxT = await fbGetAll(dbRefGroupe("creneauxT")); }
+    catch(e){ state.creneauxT = []; }
+
+    // Amorçage : si aucun référentiel n'existe encore pour ce groupe, on propose un jeu de départ
+    if(state.moduleData.transporteursT.length === 0){
+      const seed = [
+        { id: uid(), nom: "Transporteur Rapiflux", dispoDebut: "07:00", dispoFin: "18:00" },
+        { id: uid(), nom: "Transporteur SudExpress", dispoDebut: "08:00", dispoFin: "16:00" },
+      ];
+      for(const t of seed){ await fbPutItem(dbRefGroupe("transporteursT"), t); }
+      state.moduleData.transporteursT = seed;
+    }
+    if(state.moduleData.personnelT.length === 0){
+      const seed = [
+        { id: uid(), nom: "Karim (magasinier)", dispoDebut: "08:00", dispoFin: "16:00" },
+        { id: uid(), nom: "Léa (magasinière)", dispoDebut: "09:00", dispoFin: "17:00" },
+      ];
+      for(const p of seed){ await fbPutItem(dbRefGroupe("personnelT"), p); }
+      state.moduleData.personnelT = seed;
+    }
+    if(state.moduleData.typesOperationT.length === 0){
+      const seed = [
+        { id: uid(), nom: "Réception", tempsFixe: 20, tempsVariable: 2, unite: "palette" },
+        { id: uid(), nom: "Expédition", tempsFixe: 15, tempsVariable: 1.5, unite: "colis" },
+        { id: uid(), nom: "Tournée de livraison", tempsFixe: 30, tempsVariable: 5, unite: "arrêt" },
+      ];
+      for(const t of seed){ await fbPutItem(dbRefGroupe("typesOperationT"), t); }
+      state.moduleData.typesOperationT = seed;
+    }
+    if(state.moduleData.camionsT.length === 0){
+      const seed = [
+        { id: uid(), immat: "GD-001-LOG", marque: "Renault", modele: "Master", typeVehicule: "Fourgon", ptac: 3500, chargeUtile: 1400, volumeUtile: 12, statut: "Disponible" },
+        { id: uid(), immat: "GD-002-LOG", marque: "Iveco", modele: "Daily", typeVehicule: "Porteur", ptac: 7500, chargeUtile: 3200, volumeUtile: 22, statut: "Disponible" },
+        { id: uid(), immat: "GD-003-LOG", marque: "Volvo", modele: "FH", typeVehicule: "Semi-remorque", ptac: 44000, chargeUtile: 25000, volumeUtile: 90, statut: "En maintenance" },
+      ];
+      for(const c of seed){ await fbPutItem(dbRefGroupe("camionsT"), c); }
+      state.moduleData.camionsT = seed;
+    }
+  }
+
+  function computeDuree(typeOp, quantite){
+    return (typeOp ? typeOp.tempsFixe : 0) + (typeOp ? typeOp.tempsVariable : 0) * (quantite || 0);
+  }
+
+  function detectConflicts({ date, heureDebut, duree, transporteurId, personnelId, camionId, excludeId }){
+    const conflits = [];
+    const debut = timeToMinutes(heureDebut);
+    const fin = debut + duree;
+    const personnel = state.moduleData.personnelT.find(p => p.id === personnelId);
+    const transporteur = state.moduleData.transporteursT.find(t => t.id === transporteurId);
+    const camion = state.moduleData.camionsT.find(c => c.id === camionId);
+
+    if(personnel){
+      if(debut < timeToMinutes(personnel.dispoDebut) || fin > timeToMinutes(personnel.dispoFin)){
+        conflits.push(`${personnel.nom} ne travaille qu'entre ${personnel.dispoDebut} et ${personnel.dispoFin}.`);
+      }
+    }
+    if(transporteur){
+      if(debut < timeToMinutes(transporteur.dispoDebut) || fin > timeToMinutes(transporteur.dispoFin)){
+        conflits.push(`${transporteur.nom} n'est disponible qu'entre ${transporteur.dispoDebut} et ${transporteur.dispoFin}.`);
+      }
+    }
+    if(camion && camion.statut !== "Disponible"){
+      conflits.push(`Le véhicule ${camion.immat} est actuellement « ${camion.statut} ».`);
+    }
+    state.creneauxT.filter(c => c.id !== excludeId && c.date === date).forEach(c => {
+      const cDebut = timeToMinutes(c.heureDebut);
+      const cFin = cDebut + c.duree;
+      const overlap = debut < cFin && cDebut < fin;
+      if(!overlap) return;
+      if(personnelId && c.personnelId === personnelId){
+        conflits.push(`${personnel ? personnel.nom : "Ce personnel"} est déjà occupé sur le créneau ${c.heureDebut}-${minutesToTime(cFin)}.`);
+      }
+      if(transporteurId && c.transporteurId === transporteurId){
+        conflits.push(`${transporteur ? transporteur.nom : "Ce transporteur"} est déjà occupé sur le créneau ${c.heureDebut}-${minutesToTime(cFin)}.`);
+      }
+      if(camionId && c.camionId === camionId){
+        conflits.push(`${camion ? camion.immat : "Ce véhicule"} est déjà utilisé sur le créneau ${c.heureDebut}-${minutesToTime(cFin)}.`);
+      }
+    });
+    return conflits;
+  }
+
   async function loadEntrainementScores(){
     try{
       const snap = await dbRefGroupe(`entrainementScores/${state.currentUser.matricule}`).get();
@@ -3506,6 +3651,12 @@ const CALCUL_TEMPLATES = {
       state.receptionView = "list";
       state.activeReceptionId = null;
     }
+    if(moduleId === "transport"){
+      await loadTransportData();
+      state.transportView = "agenda";
+      state.transportDate = state.transportDate || todayISO();
+      state.transportConflictPreview = null;
+    }
     if(moduleId === "excel"){
       if(state.currentUser.role === "enseignant"){
         await loadAllExcelProgress();
@@ -4150,6 +4301,7 @@ const CALCUL_TEMPLATES = {
     else if(state.activeModule === "messagerie") renderMessagerie(content);
     else if(state.activeModule === "picking") renderModulePicking(content);
     else if(state.activeModule === "reception") renderModuleReception(content);
+    else if(state.activeModule === "transport") renderModuleTransport(content);
     else if(state.activeModule === "excel") renderModuleExcel(content);
     else if(state.activeModule === "pole3") renderModulePole3(content);
     else if(state.activeModule === "brasserie") renderModuleBrasserie(content);
@@ -5423,6 +5575,446 @@ const CALCUL_TEMPLATES = {
       await fbPutItem(dbRefGroupe("receptions"), r);
 
       showToast("Réception validée, stock mis à jour.");
+      render();
+    });
+  }
+
+  /* ============ RENDER : MODULE TRANSPORT (agenda des créneaux) ============ */
+  const TRANSPORT_DAY_START = 6 * 60;  // 06:00
+  const TRANSPORT_DAY_END = 20 * 60;   // 20:00
+  const TRANSPORT_DAY_SPAN = TRANSPORT_DAY_END - TRANSPORT_DAY_START;
+
+  function renderModuleTransport(content){
+    if(state.transportView === "nouveau") return renderTransportNouveau(content);
+    if(state.transportView === "referentiels") return renderTransportReferentiels(content);
+    return renderTransportAgenda(content);
+  }
+
+  function transportSlotPct(heureDebut, duree){
+    const debut = timeToMinutes(heureDebut);
+    const left = Math.max(0, ((debut - TRANSPORT_DAY_START) / TRANSPORT_DAY_SPAN) * 100);
+    const width = Math.max(1.5, (duree / TRANSPORT_DAY_SPAN) * 100);
+    return { left, width };
+  }
+
+  function renderTransportAgenda(content){
+    const isTeacher = state.currentUser.role === "enseignant";
+    const dateStr = state.transportDate;
+    const creneauxJour = state.creneauxT.filter(c => c.date === dateStr).sort((a,b) => timeToMinutes(a.heureDebut) - timeToMinutes(b.heureDebut));
+    const personnelList = state.moduleData.personnelT;
+
+    const hourMarks = [];
+    for(let h = 6; h <= 20; h += 2) hourMarks.push(h);
+
+    const rowsHTML = personnelList.length === 0 ? `<div class="empty-state">Aucun personnel défini. Allez dans « Référentiels » pour en ajouter.</div>` : personnelList.map(p => {
+      const slots = creneauxJour.filter(c => c.personnelId === p.id);
+      return `
+        <div class="transport-row">
+          <div class="transport-row-label">${p.nom}<div class="hint">${p.dispoDebut}–${p.dispoFin}</div></div>
+          <div class="transport-track">
+            ${slots.map(c => {
+              const { left, width } = transportSlotPct(c.heureDebut, c.duree);
+              const typeOp = state.moduleData.typesOperationT.find(t => t.id === c.typeOperationId);
+              const hasConflict = c.conflits && c.conflits.length > 0;
+              return `
+                <div class="transport-slot ${hasConflict ? "conflict" : ""}" style="left:${left}%; width:${width}%;" data-creneau="${c.id}" title="${typeOp ? typeOp.nom : ""} ${c.heureDebut}-${minutesToTime(timeToMinutes(c.heureDebut)+c.duree)}${hasConflict ? " — CONFLIT" : ""}">
+                  <span>${typeOp ? typeOp.nom : "?"}</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      ${isTeacher ? `<button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>` : ""}
+      <div class="menu-intro" style="margin-top:16px;">
+        <h1>Transport & tournées</h1>
+        <p>Agenda des créneaux du groupe ${state.activeGroupe}. Chaque créneau combine un temps fixe et un temps variable selon la quantité, et vérifie les disponibilités.</p>
+      </div>
+
+      <div class="transport-toolbar">
+        <button class="btn-ghost" id="prevDayBtn">&larr; Veille</button>
+        <input type="date" id="transportDateInput" value="${dateStr}" />
+        <button class="btn-ghost" id="nextDayBtn">Lendemain &rarr;</button>
+        <button class="btn btn-primary" id="newCreneauBtn" style="width:auto; margin-left:auto;">+ Nouveau créneau</button>
+        <button class="btn-ghost" id="referentielsBtn">Référentiels</button>
+      </div>
+
+      <div class="panel" style="margin-top:14px;">
+        <div class="transport-hours">
+          <div class="transport-row-label"></div>
+          <div class="transport-track transport-hours-track">
+            ${hourMarks.map(h => `<span style="left:${((h*60 - TRANSPORT_DAY_START)/TRANSPORT_DAY_SPAN)*100}%;">${h}h</span>`).join("")}
+          </div>
+        </div>
+        ${rowsHTML}
+      </div>
+
+      <div class="panel" style="margin-top:18px;">
+        <h2>Créneaux du ${new Date(dateStr+"T00:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</h2>
+        ${creneauxJour.length === 0 ? `<div class="empty-state">Aucun créneau ce jour-là.</div>` : `
+          <table>
+            <thead><tr><th>Heure</th><th>Opération</th><th>Personnel</th><th>Transporteur</th><th>Véhicule</th><th>Quantité</th><th>Durée</th><th>Statut</th><th></th></tr></thead>
+            <tbody>
+              ${creneauxJour.map(c => {
+                const typeOp = state.moduleData.typesOperationT.find(t => t.id === c.typeOperationId);
+                const personnel = state.moduleData.personnelT.find(p => p.id === c.personnelId);
+                const transporteur = state.moduleData.transporteursT.find(t => t.id === c.transporteurId);
+                const camion = state.moduleData.camionsT.find(v => v.id === c.camionId);
+                const fin = minutesToTime(timeToMinutes(c.heureDebut) + c.duree);
+                const hasConflict = c.conflits && c.conflits.length > 0;
+                return `
+                  <tr>
+                    <td>${c.heureDebut} – ${fin}</td>
+                    <td>${typeOp ? typeOp.nom : "—"}</td>
+                    <td>${personnel ? personnel.nom : "—"}</td>
+                    <td>${transporteur ? transporteur.nom : "—"}</td>
+                    <td>${camion ? camion.immat : "—"}</td>
+                    <td>${c.quantite} ${typeOp ? typeOp.unite : ""}</td>
+                    <td>${formatDureeMin(c.duree)}</td>
+                    <td>${hasConflict ? `<span class="role-pill" style="background:#c0392b;" title="${(c.conflits||[]).join(" | ")}">Conflit</span>` : `<span class="role-pill" style="background:var(--green);">OK</span>`}</td>
+                    <td><button class="btn-danger delete-creneau-btn" data-id="${c.id}" style="padding:4px 10px; font-size:12px;">Supprimer</button></td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        `}
+      </div>
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    const changeGroupeBtn = document.getElementById("changeGroupeBtn");
+    if(changeGroupeBtn){
+      changeGroupeBtn.addEventListener("click", () => {
+        state.pendingModule = "transport";
+        state.view = "groupe-select";
+        render();
+      });
+    }
+    document.getElementById("transportDateInput").addEventListener("change", (e) => {
+      state.transportDate = e.target.value;
+      render();
+    });
+    document.getElementById("prevDayBtn").addEventListener("click", () => {
+      const d = new Date(state.transportDate + "T00:00:00");
+      d.setDate(d.getDate() - 1);
+      state.transportDate = d.toISOString().slice(0,10);
+      render();
+    });
+    document.getElementById("nextDayBtn").addEventListener("click", () => {
+      const d = new Date(state.transportDate + "T00:00:00");
+      d.setDate(d.getDate() + 1);
+      state.transportDate = d.toISOString().slice(0,10);
+      render();
+    });
+    document.getElementById("newCreneauBtn").addEventListener("click", () => {
+      state.transportView = "nouveau";
+      render();
+    });
+    document.getElementById("referentielsBtn").addEventListener("click", () => {
+      state.transportView = "referentiels";
+      render();
+    });
+    content.querySelectorAll(".delete-creneau-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if(!confirm("Supprimer ce créneau ?")) return;
+        const ok = await fbRemoveItem(dbRefGroupe("creneauxT"), btn.dataset.id);
+        if(!ok) return;
+        state.creneauxT = state.creneauxT.filter(c => c.id !== btn.dataset.id);
+        showToast("Créneau supprimé.");
+        render();
+      });
+    });
+  }
+
+  function renderTransportNouveau(content){
+    const typesOp = state.moduleData.typesOperationT;
+    const personnelList = state.moduleData.personnelT;
+    const transporteursList = state.moduleData.transporteursT;
+    const camionsList = state.moduleData.camionsT;
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour à l'agenda</button>
+      <div class="panel" style="margin-top:16px;">
+        <h2>Nouveau créneau</h2>
+        ${(typesOp.length === 0 || personnelList.length === 0 || transporteursList.length === 0) ? `
+          <div class="empty-state">Il faut au moins un type d'opération, un personnel et un transporteur définis dans les référentiels avant de créer un créneau.</div>
+        ` : `
+          <div class="admin-form-row">
+            <div>
+              <label for="ncDate">Date</label>
+              <input id="ncDate" type="date" value="${state.transportDate}" />
+            </div>
+            <div>
+              <label for="ncHeure">Heure de début</label>
+              <input id="ncHeure" type="time" value="08:00" />
+            </div>
+            <div>
+              <label for="ncType">Type d'opération</label>
+              <select id="ncType">${typesOp.map(t => `<option value="${t.id}">${t.nom} (fixe ${t.tempsFixe} min + ${t.tempsVariable} min/${t.unite})</option>`).join("")}</select>
+            </div>
+          </div>
+          <div class="admin-form-row" style="margin-top:12px;">
+            <div>
+              <label for="ncPersonnel">Personnel</label>
+              <select id="ncPersonnel">${personnelList.map(p => `<option value="${p.id}">${p.nom} (${p.dispoDebut}–${p.dispoFin})</option>`).join("")}</select>
+            </div>
+            <div>
+              <label for="ncTransporteur">Transporteur</label>
+              <select id="ncTransporteur">${transporteursList.map(t => `<option value="${t.id}">${t.nom} (${t.dispoDebut}–${t.dispoFin})</option>`).join("")}</select>
+            </div>
+            <div>
+              <label for="ncQuantite">Quantité (<span id="ncUniteLabel">${typesOp[0].unite}</span>)</label>
+              <input id="ncQuantite" type="number" min="1" value="1" />
+            </div>
+          </div>
+          <div class="admin-form-row" style="margin-top:12px;">
+            <div>
+              <label for="ncCamion">Véhicule (optionnel)</label>
+              <select id="ncCamion">
+                <option value="">— Aucun véhicule assigné —</option>
+                ${camionsList.map(c => `<option value="${c.id}">${c.immat} — ${c.marque} ${c.modele} (${c.statut})</option>`).join("")}
+              </select>
+            </div>
+          </div>
+
+          <div class="info-box" id="ncDureeBox" style="margin-top:14px;"></div>
+          <div id="ncConflictBox"></div>
+
+          <button class="btn btn-primary" id="createCreneauBtn" style="width:auto; margin-top:14px;">Créer le créneau</button>
+        `}
+      </div>
+    `;
+    document.getElementById("backBtn").addEventListener("click", () => { state.transportView = "agenda"; render(); });
+    if(typesOp.length === 0 || personnelList.length === 0 || transporteursList.length === 0) return;
+
+    function currentTypeOp(){ return typesOp.find(t => t.id === document.getElementById("ncType").value); }
+
+    function updatePreview(){
+      const typeOp = currentTypeOp();
+      document.getElementById("ncUniteLabel").textContent = typeOp.unite;
+      const qte = parseInt(document.getElementById("ncQuantite").value, 10) || 0;
+      const duree = computeDuree(typeOp, qte);
+      const heureDebut = document.getElementById("ncHeure").value;
+      const fin = minutesToTime(timeToMinutes(heureDebut) + duree);
+      document.getElementById("ncDureeBox").innerHTML =
+        `Durée calculée : <strong>${typeOp.tempsFixe} min (fixe) + ${typeOp.tempsVariable} × ${qte} = ${formatDureeMin(duree)}</strong> — de ${heureDebut} à ${fin}.`;
+
+      const conflits = detectConflicts({
+        date: document.getElementById("ncDate").value,
+        heureDebut,
+        duree,
+        transporteurId: document.getElementById("ncTransporteur").value,
+        personnelId: document.getElementById("ncPersonnel").value,
+        camionId: document.getElementById("ncCamion").value || null,
+        excludeId: null
+      });
+      const conflictBox = document.getElementById("ncConflictBox");
+      conflictBox.innerHTML = conflits.length > 0
+        ? `<div class="error-box">⚠️ ${conflits.join("<br>")}</div>`
+        : `<div class="info-box" style="background:#f4faf5; border-color:#cfe8d6; color:#1d6b34;">Aucun conflit détecté.</div>`;
+    }
+
+    ["ncDate","ncHeure","ncType","ncPersonnel","ncTransporteur","ncQuantite","ncCamion"].forEach(id => {
+      document.getElementById(id).addEventListener("input", updatePreview);
+      document.getElementById(id).addEventListener("change", updatePreview);
+    });
+    updatePreview();
+
+    document.getElementById("createCreneauBtn").addEventListener("click", async () => {
+      const typeOp = currentTypeOp();
+      const qte = parseInt(document.getElementById("ncQuantite").value, 10);
+      if(isNaN(qte) || qte < 1){
+        showToast("La quantité doit être un nombre d'au moins 1.");
+        return;
+      }
+      const heureDebut = document.getElementById("ncHeure").value;
+      const date = document.getElementById("ncDate").value;
+      const duree = computeDuree(typeOp, qte);
+      const transporteurId = document.getElementById("ncTransporteur").value;
+      const personnelId = document.getElementById("ncPersonnel").value;
+      const camionId = document.getElementById("ncCamion").value || null;
+      const conflits = detectConflicts({ date, heureDebut, duree, transporteurId, personnelId, camionId, excludeId: null });
+
+      if(conflits.length > 0){
+        if(!confirm(`⚠️ Ce créneau présente des conflits :\n\n${conflits.join("\n")}\n\nLe créer quand même ?`)) return;
+      }
+
+      const creneau = {
+        id: uid(), date, heureDebut, duree, typeOperationId: typeOp.id,
+        personnelId, transporteurId, camionId, quantite: qte, conflits,
+        createdBy: state.currentUser.matricule, createdByNom: state.currentUser.nom, createdAt: Date.now()
+      };
+      state.creneauxT.push(creneau);
+      await fbPutItem(dbRefGroupe("creneauxT"), creneau);
+      showToast("Créneau créé.");
+      state.transportDate = date;
+      state.transportView = "agenda";
+      render();
+    });
+  }
+
+  function renderTransportReferentiels(content){
+    const isTeacher = state.currentUser.role === "enseignant";
+    const tab = state.transportRefTab;
+
+    function tableFor(key, cols){
+      const rows = state.moduleData[key];
+      return `
+        <table>
+          <thead><tr>${cols.map(c => `<th>${c.label}</th>`).join("")}<th></th></tr></thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                ${cols.map(c => `<td>${r[c.key]}</td>`).join("")}
+                <td><button class="btn-danger ref-delete-btn" data-key="${key}" data-id="${r.id}" style="padding:4px 10px; font-size:12px;">Supprimer</button></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    let tabContentHTML = "";
+    if(tab === "transporteurs"){
+      tabContentHTML = `
+        ${tableFor("transporteursT", [{key:"nom",label:"Nom"},{key:"dispoDebut",label:"Disponible de"},{key:"dispoFin",label:"à"}])}
+        <div class="admin-form-row" style="margin-top:14px;">
+          <div><label for="refNom">Nom du transporteur</label><input id="refNom" type="text" placeholder="ex : Transporteur Nordex" /></div>
+          <div><label for="refDebut">Disponible de</label><input id="refDebut" type="time" value="08:00" /></div>
+          <div><label for="refFin">à</label><input id="refFin" type="time" value="18:00" /></div>
+        </div>
+        <button class="btn btn-primary" id="addRefBtn" style="width:auto; margin-top:10px;">Ajouter</button>
+      `;
+    } else if(tab === "personnel"){
+      tabContentHTML = `
+        ${tableFor("personnelT", [{key:"nom",label:"Nom"},{key:"dispoDebut",label:"Travaille de"},{key:"dispoFin",label:"à"}])}
+        <div class="admin-form-row" style="margin-top:14px;">
+          <div><label for="refNom">Nom</label><input id="refNom" type="text" placeholder="ex : Sami (magasinier)" /></div>
+          <div><label for="refDebut">Travaille de</label><input id="refDebut" type="time" value="08:00" /></div>
+          <div><label for="refFin">à</label><input id="refFin" type="time" value="16:00" /></div>
+        </div>
+        <button class="btn btn-primary" id="addRefBtn" style="width:auto; margin-top:10px;">Ajouter</button>
+      `;
+    } else if(tab === "camions"){
+      tabContentHTML = `
+        <p class="hint" style="margin-bottom:12px;">Critères standards d'une fiche véhicule : immatriculation, marque/modèle, type, PTAC, charge utile, volume utile et statut.</p>
+        ${tableFor("camionsT", [
+          {key:"immat",label:"Immatriculation"}, {key:"marque",label:"Marque"}, {key:"modele",label:"Modèle"},
+          {key:"typeVehicule",label:"Type"}, {key:"ptac",label:"PTAC (kg)"}, {key:"chargeUtile",label:"Charge utile (kg)"},
+          {key:"volumeUtile",label:"Volume utile (m³)"}, {key:"statut",label:"Statut"}
+        ])}
+        <div class="admin-form-row" style="margin-top:14px;">
+          <div><label for="refImmat">Immatriculation</label><input id="refImmat" type="text" data-mono="true" placeholder="ex : GD-004-LOG" /></div>
+          <div><label for="refMarque">Marque</label><input id="refMarque" type="text" placeholder="ex : Renault" /></div>
+          <div><label for="refModele">Modèle</label><input id="refModele" type="text" placeholder="ex : Master" /></div>
+          <div><label for="refTypeVehicule">Type de véhicule</label>
+            <select id="refTypeVehicule">
+              <option>Camionnette</option><option>Fourgon</option><option>Porteur</option><option>Semi-remorque</option>
+            </select>
+          </div>
+        </div>
+        <div class="admin-form-row" style="margin-top:12px;">
+          <div><label for="refPtac">PTAC (kg)</label><input id="refPtac" type="number" min="0" value="3500" /></div>
+          <div><label for="refChargeUtile">Charge utile (kg)</label><input id="refChargeUtile" type="number" min="0" value="1400" /></div>
+          <div><label for="refVolumeUtile">Volume utile (m³)</label><input id="refVolumeUtile" type="number" min="0" step="0.5" value="12" /></div>
+          <div><label for="refStatut">Statut</label>
+            <select id="refStatut">
+              <option>Disponible</option><option>En tournée</option><option>En maintenance</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="addRefBtn" style="width:auto; margin-top:10px;">Ajouter</button>
+      `;
+    } else {
+      tabContentHTML = `
+        ${tableFor("typesOperationT", [{key:"nom",label:"Opération"},{key:"tempsFixe",label:"Temps fixe (min)"},{key:"tempsVariable",label:"Temps variable (min/unité)"},{key:"unite",label:"Unité"}])}
+        <div class="admin-form-row" style="margin-top:14px;">
+          <div><label for="refNom">Nom de l'opération</label><input id="refNom" type="text" placeholder="ex : Inventaire" /></div>
+          <div><label for="refFixe">Temps fixe (min)</label><input id="refFixe" type="number" min="0" value="15" /></div>
+          <div><label for="refVariable">Temps variable (min/unité)</label><input id="refVariable" type="number" min="0" step="0.5" value="2" /></div>
+          <div><label for="refUnite">Unité</label><input id="refUnite" type="text" placeholder="ex : palette" value="unité" /></div>
+        </div>
+        <button class="btn btn-primary" id="addRefBtn" style="width:auto; margin-top:10px;">Ajouter</button>
+      `;
+    }
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour à l'agenda</button>
+      <div class="menu-intro" style="margin-top:16px;">
+        <h1>Référentiels — Transport</h1>
+        <p>Définissez les transporteurs, le personnel, la flotte de véhicules et les types d'opération utilisés pour créer des créneaux.</p>
+      </div>
+      <div class="doc-tabs no-print">
+        <button class="doc-tab ${tab === "transporteurs" ? "active" : ""}" id="tabTransporteurs">Transporteurs</button>
+        <button class="doc-tab ${tab === "personnel" ? "active" : ""}" id="tabPersonnel">Personnel</button>
+        <button class="doc-tab ${tab === "camions" ? "active" : ""}" id="tabCamions">Flotte de camions</button>
+        <button class="doc-tab ${tab === "types" ? "active" : ""}" id="tabTypes">Types d'opération</button>
+      </div>
+      <div class="panel" style="margin-top:0;">
+        ${tabContentHTML}
+      </div>
+    `;
+    document.getElementById("backBtn").addEventListener("click", () => { state.transportView = "agenda"; render(); });
+    document.getElementById("tabTransporteurs").addEventListener("click", () => { state.transportRefTab = "transporteurs"; render(); });
+    document.getElementById("tabPersonnel").addEventListener("click", () => { state.transportRefTab = "personnel"; render(); });
+    document.getElementById("tabCamions").addEventListener("click", () => { state.transportRefTab = "camions"; render(); });
+    document.getElementById("tabTypes").addEventListener("click", () => { state.transportRefTab = "types"; render(); });
+
+    content.querySelectorAll(".ref-delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if(!confirm("Supprimer cet élément ? Les créneaux qui l'utilisent déjà ne seront pas supprimés.")) return;
+        const key = btn.dataset.key, id = btn.dataset.id;
+        const ok = await fbRemoveItem(dbRefGroupe(key), id);
+        if(!ok) return;
+        state.moduleData[key] = state.moduleData[key].filter(r => r.id !== id);
+        render();
+      });
+    });
+
+    document.getElementById("addRefBtn").addEventListener("click", async () => {
+      let item, dbKey, stateKey;
+      if(tab === "camions"){
+        const immat = document.getElementById("refImmat").value.trim();
+        if(!immat){ showToast("L'immatriculation est obligatoire."); return; }
+        const ptac = parseFloat(document.getElementById("refPtac").value);
+        const chargeUtile = parseFloat(document.getElementById("refChargeUtile").value);
+        const volumeUtile = parseFloat(document.getElementById("refVolumeUtile").value);
+        if(isNaN(ptac) || isNaN(chargeUtile) || isNaN(volumeUtile)){ showToast("PTAC, charge utile et volume doivent être des nombres."); return; }
+        item = {
+          id: uid(), immat,
+          marque: document.getElementById("refMarque").value.trim(),
+          modele: document.getElementById("refModele").value.trim(),
+          typeVehicule: document.getElementById("refTypeVehicule").value,
+          ptac, chargeUtile, volumeUtile,
+          statut: document.getElementById("refStatut").value
+        };
+        dbKey = "camionsT"; stateKey = "camionsT";
+      } else {
+        const nom = document.getElementById("refNom").value.trim();
+        if(!nom){ showToast("Le nom est obligatoire."); return; }
+        if(tab === "transporteurs"){
+          item = { id: uid(), nom, dispoDebut: document.getElementById("refDebut").value, dispoFin: document.getElementById("refFin").value };
+          dbKey = "transporteursT"; stateKey = "transporteursT";
+        } else if(tab === "personnel"){
+          item = { id: uid(), nom, dispoDebut: document.getElementById("refDebut").value, dispoFin: document.getElementById("refFin").value };
+          dbKey = "personnelT"; stateKey = "personnelT";
+        } else {
+          const fixe = parseFloat(document.getElementById("refFixe").value);
+          const variable = parseFloat(document.getElementById("refVariable").value);
+          const unite = document.getElementById("refUnite").value.trim() || "unité";
+          if(isNaN(fixe) || isNaN(variable)){ showToast("Temps fixe et variable doivent être des nombres."); return; }
+          item = { id: uid(), nom, tempsFixe: fixe, tempsVariable: variable, unite };
+          dbKey = "typesOperationT"; stateKey = "typesOperationT";
+        }
+      }
+      state.moduleData[stateKey].push(item);
+      await fbPutItem(dbRefGroupe(dbKey), item);
+      showToast("Ajouté.");
       render();
     });
   }
