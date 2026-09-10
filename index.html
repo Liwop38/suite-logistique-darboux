@@ -416,6 +416,23 @@
   .progress-track{ height: 10px; background:#e5e2da; border-radius: 6px; overflow:hidden; margin: 16px 0 22px; }
   .progress-fill{ height:100%; background: var(--orange); transition: width .3s ease; }
 
+  .rappel-list{ margin: 0 0 4px; padding-left: 20px; }
+  .rappel-list li{ margin-bottom: 8px; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+
+  .quiz-progress-row{ display:flex; justify-content:space-between; font-size:13px; color: var(--ink-soft); font-weight:600; }
+
+  .quiz-options{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .quiz-option{
+    text-align:left; padding: 12px 16px; border-radius: var(--radius); border: 1.5px solid var(--line);
+    background: var(--panel); font-family: var(--sans); font-size: 14px; color: var(--ink); cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .quiz-option:hover:not(:disabled){ border-color: var(--orange); background: #fff9f4; }
+  .quiz-option.selected{ border-color: var(--steel); background: #eef3f4; }
+  .quiz-option.correct{ border-color: var(--green); background: #f4faf5; color: #1d6b34; font-weight:700; }
+  .quiz-option.incorrect{ border-color: #c0392b; background: #fbeceb; color: #a5291b; font-weight:700; }
+  .quiz-option:disabled{ cursor: default; }
+
   .excel-steps-list{ display:flex; flex-direction:column; gap:10px; }
   .excel-step{
     display:flex; align-items:center; gap:16px; background: var(--panel); border:1px solid var(--line);
@@ -588,8 +605,207 @@
     { id: "pole1", code: "M-09", title: "Pôle 1 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C1.1 à C1.6).", ready: true, category: "cours" },
     { id: "pole2", code: "M-10", title: "Pôle 2 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C2.1 à C2.6).", ready: true, category: "cours" },
     { id: "pole3", code: "M-06", title: "Pôle 3 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C3.1 à C3.4).", ready: true, category: "cours" },
-    { id: "brasserie", code: "M-07", title: "Étude de cas — Brasseries du Gâtinais", desc: "Palettisation, mise en stock et adressage — exercice complet noté.", ready: true, category: "etude-de-cas" }
+    { id: "brasserie", code: "M-07", title: "Étude de cas — Brasseries du Gâtinais", desc: "Palettisation, mise en stock et adressage — exercice complet noté.", ready: true, category: "etude-de-cas" },
+    { id: "calcul", code: "ENTR-1", title: "Calcul", desc: "Proportionnalité, conversions, arrondis — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
+    { id: "geo", code: "ENTR-2", title: "Géo", desc: "Capitales, régions et repères utiles en logistique — 3 quiz de 20 questions.", ready: true, category: "entrainement" }
   ];
+
+  const QUIZZES = {
+  calcul: [
+    {
+      id: "calcul-conversions",
+      titre: "Conversions d'unités",
+      description: "Longueurs, masses, volumes, durées : convertir sans se tromper.",
+      rappel: [
+        "Longueur : 1 km = 1000 m · 1 m = 100 cm · 1 cm = 10 mm",
+        "Masse : 1 t = 1000 kg · 1 kg = 1000 g",
+        "Volume / capacité : 1 m³ = 1000 L · 1 L = 1000 mL",
+        "Temps : 1 h = 60 min · 1 min = 60 s"
+      ],
+      questions: [
+        { q: "Combien font 3,5 km en mètres ?", options: ["350 m", "3 500 m", "35 000 m", "3,5 m"], correct: 1, explication: "1 km = 1000 m, donc 3,5 × 1000 = 3 500 m." },
+        { q: "Combien font 2 500 g en kilogrammes ?", options: ["0,25 kg", "2,5 kg", "25 kg", "250 kg"], correct: 1, explication: "1000 g = 1 kg, donc 2500 ÷ 1000 = 2,5 kg." },
+        { q: "1,2 tonne représente combien de kilogrammes ?", options: ["12 kg", "120 kg", "1 200 kg", "12 000 kg"], correct: 2, explication: "1 t = 1000 kg, donc 1,2 × 1000 = 1 200 kg." },
+        { q: "750 mL représentent combien de litres ?", options: ["0,075 L", "0,75 L", "7,5 L", "75 L"], correct: 1, explication: "1000 mL = 1 L, donc 750 ÷ 1000 = 0,75 L." },
+        { q: "Combien de minutes dans 2,5 heures ?", options: ["25 min", "100 min", "150 min", "250 min"], correct: 2, explication: "1 h = 60 min, donc 2,5 × 60 = 150 min." },
+        { q: "Un carton pèse 4 200 g. Combien de kilogrammes ?", options: ["0,42 kg", "4,2 kg", "42 kg", "420 kg"], correct: 1, explication: "4200 ÷ 1000 = 4,2 kg." },
+        { q: "Une palette mesure 1,2 m de large. Combien de centimètres ?", options: ["1,2 cm", "12 cm", "120 cm", "1 200 cm"], correct: 2, explication: "1 m = 100 cm, donc 1,2 × 100 = 120 cm." },
+        { q: "3 m³ représentent combien de litres ?", options: ["30 L", "300 L", "3 000 L", "30 000 L"], correct: 2, explication: "1 m³ = 1000 L, donc 3 × 1000 = 3 000 L." },
+        { q: "Combien de secondes dans 3 minutes ?", options: ["30 s", "60 s", "120 s", "180 s"], correct: 3, explication: "1 min = 60 s, donc 3 × 60 = 180 s." },
+        { q: "0,5 tonne représente combien de kilogrammes ?", options: ["5 kg", "50 kg", "500 kg", "5 000 kg"], correct: 2, explication: "0,5 × 1000 = 500 kg." },
+        { q: "Un camion parcourt 45 km. Combien de mètres ?", options: ["450 m", "4 500 m", "45 000 m", "450 000 m"], correct: 2, explication: "45 × 1000 = 45 000 m." },
+        { q: "2 heures 15 minutes représentent combien de minutes au total ?", options: ["115 min", "125 min", "135 min", "215 min"], correct: 2, explication: "2 × 60 = 120, puis 120 + 15 = 135 min." },
+        { q: "Combien de grammes dans 0,25 kg ?", options: ["2,5 g", "25 g", "250 g", "2 500 g"], correct: 2, explication: "0,25 × 1000 = 250 g." },
+        { q: "Une caisse mesure 80 cm de long. Combien de mètres ?", options: ["0,08 m", "0,8 m", "8 m", "80 m"], correct: 1, explication: "80 ÷ 100 = 0,8 m." },
+        { q: "Combien de litres dans 2,5 m³ ?", options: ["25 L", "250 L", "2 500 L", "25 000 L"], correct: 2, explication: "2,5 × 1000 = 2 500 L." },
+        { q: "Un colis pèse 1 500 g. Combien de kilogrammes ?", options: ["0,15 kg", "1,5 kg", "15 kg", "150 kg"], correct: 1, explication: "1500 ÷ 1000 = 1,5 kg." },
+        { q: "Combien d'heures dans 180 minutes ?", options: ["1,5 h", "2 h", "3 h", "4 h"], correct: 2, explication: "180 ÷ 60 = 3 h." },
+        { q: "6 000 kg représentent combien de tonnes ?", options: ["0,6 t", "6 t", "60 t", "600 t"], correct: 1, explication: "6000 ÷ 1000 = 6 t." },
+        { q: "Une étagère fait 2,4 m de long. Combien de centimètres ?", options: ["24 cm", "240 cm", "2 400 cm", "24 000 cm"], correct: 1, explication: "2,4 × 100 = 240 cm." },
+        { q: "45 minutes représentent combien d'heures (sous forme décimale) ?", options: ["0,45 h", "0,75 h", "1,45 h", "4,5 h"], correct: 1, explication: "45 ÷ 60 = 0,75 h." }
+      ]
+    },
+    {
+      id: "calcul-proportionnalite",
+      titre: "Proportionnalité",
+      description: "Règle de trois, vitesse-distance-temps, échelles : des problèmes concrets de logistique.",
+      rappel: [
+        "Deux grandeurs sont proportionnelles si l'une s'obtient en multipliant l'autre par un nombre fixe.",
+        "Règle de trois : si a correspond à b, alors la valeur x correspondant à c se calcule par x = (b × c) ÷ a.",
+        "Vitesse, distance, temps : distance = vitesse × temps · vitesse = distance ÷ temps · temps = distance ÷ vitesse."
+      ],
+      questions: [
+        { q: "Un camion roule à 80 km/h pendant 3 heures. Quelle distance parcourt-il ?", options: ["83 km", "160 km", "240 km", "270 km"], correct: 2, explication: "distance = vitesse × temps = 80 × 3 = 240 km." },
+        { q: "5 cartons identiques pèsent 40 kg au total. Combien pèsent 8 cartons ?", options: ["45 kg", "56 kg", "64 kg", "72 kg"], correct: 2, explication: "40 ÷ 5 × 8 = 64 kg." },
+        { q: "Un préparateur prépare 60 colis en 2 heures. À ce rythme, combien de colis en 5 heures ?", options: ["120", "150", "180", "300"], correct: 1, explication: "60 ÷ 2 × 5 = 150 colis." },
+        { q: "Une palette de 12 cartons pèse 180 kg. Combien pèse une palette de 20 cartons identiques ?", options: ["240 kg", "260 kg", "300 kg", "360 kg"], correct: 2, explication: "180 ÷ 12 × 20 = 300 kg." },
+        { q: "Un camion consomme 30 L de carburant pour 100 km. Combien consomme-t-il pour 250 km ?", options: ["45 L", "60 L", "75 L", "90 L"], correct: 2, explication: "30 ÷ 100 × 250 = 75 L." },
+        { q: "Sur un plan, 2 cm représentent 50 km en réalité. Que représentent 5 cm sur ce même plan ?", options: ["100 km", "125 km", "150 km", "250 km"], correct: 1, explication: "50 ÷ 2 × 5 = 125 km." },
+        { q: "Une machine produit 300 pièces en 4 heures. Combien de pièces produit-elle en 7 heures, au même rythme ?", options: ["425", "450", "500", "525"], correct: 3, explication: "300 ÷ 4 × 7 = 525 pièces." },
+        { q: "Un véhicule parcourt 210 km en 3 heures. Quelle est sa vitesse moyenne ?", options: ["60 km/h", "65 km/h", "70 km/h", "75 km/h"], correct: 2, explication: "vitesse = distance ÷ temps = 210 ÷ 3 = 70 km/h." },
+        { q: "À une vitesse de 90 km/h, combien de temps faut-il pour parcourir 315 km ?", options: ["2h30", "3h", "3h30", "4h"], correct: 2, explication: "temps = distance ÷ vitesse = 315 ÷ 90 = 3,5 h = 3h30." },
+        { q: "3 employés préparent 90 commandes par jour. Combien 5 employés préparent-ils par jour, au même rythme ?", options: ["120", "135", "150", "180"], correct: 2, explication: "90 ÷ 3 × 5 = 150 commandes." },
+        { q: "Un fournisseur facture 25 € pour 10 kg de marchandise. Combien facture-t-il pour 26 kg ?", options: ["55 €", "60 €", "65 €", "70 €"], correct: 2, explication: "25 ÷ 10 × 26 = 65 €." },
+        { q: "Un chariot élévateur déplace 8 palettes en 20 minutes. Combien en déplace-t-il en 1 heure, au même rythme ?", options: ["16", "20", "24", "32"], correct: 2, explication: "8 ÷ 20 × 60 = 24 palettes." },
+        { q: "Une échelle de plan indique que 1 cm représente 20 km. Quelle distance réelle représentent 4,5 cm ?", options: ["60 km", "80 km", "90 km", "100 km"], correct: 2, explication: "20 × 4,5 = 90 km." },
+        { q: "4 cartons identiques occupent un volume de 0,8 m³. Quel volume occupent 10 cartons identiques ?", options: ["1,6 m³", "2 m³", "2,4 m³", "3,2 m³"], correct: 1, explication: "0,8 ÷ 4 × 10 = 2 m³." },
+        { q: "Un camion à vitesse constante parcourt 50 km en 40 minutes. Combien de km parcourt-il en 60 minutes ?", options: ["60 km", "65 km", "70 km", "75 km"], correct: 3, explication: "50 ÷ 40 × 60 = 75 km." },
+        { q: "Pour emballer 100 produits, il faut 4 rouleaux de film. Combien de rouleaux pour 250 produits, au même rythme ?", options: ["8", "10", "12", "14"], correct: 1, explication: "4 ÷ 100 × 250 = 10 rouleaux." },
+        { q: "3 kg d'un produit coûtent 18 € au même prix au kilo. Combien coûtent 7 kg ?", options: ["36 €", "40 €", "42 €", "45 €"], correct: 2, explication: "18 ÷ 3 × 7 = 42 €." },
+        { q: "Une équipe de 4 personnes décharge un camion en 45 minutes. Combien de temps faudrait-il à 6 personnes, au même rythme individuel ?", options: ["20 min", "30 min", "35 min", "40 min"], correct: 1, explication: "Attention : ici plus il y a de monde, moins il faut de temps (proportionnalité inverse). 4 × 45 ÷ 6 = 30 min." },
+        { q: "Un camion parcourt une distance en 6 heures à vitesse constante. Un autre camion parcourt le double de distance à la même vitesse. Combien de temps met-il ?", options: ["3 h", "6 h", "9 h", "12 h"], correct: 3, explication: "À vitesse égale, le double de distance demande le double de temps : 6 × 2 = 12 h." },
+        { q: "Un conditionnement utilise 2 kg de matière pour produire 5 unités. Combien de kg faut-il pour produire 12 unités, au même ratio ?", options: ["3,6 kg", "4 kg", "4,8 kg", "5,2 kg"], correct: 2, explication: "2 ÷ 5 × 12 = 4,8 kg." }
+      ]
+    },
+    {
+      id: "calcul-arrondis",
+      titre: "Arrondis et pourcentages",
+      description: "Arrondir correctement et calculer des taux (remplissage, casse, remise…).",
+      rappel: [
+        "Pour arrondir, on regarde le chiffre juste après la position voulue : s'il est inférieur à 5, on ne change rien ; s'il est égal ou supérieur à 5, on augmente le chiffre précédent de 1.",
+        "Calculer X % d'un nombre N : N × X ÷ 100.",
+        "Augmentation de X % : nouvelle valeur = ancienne valeur × (1 + X/100). Diminution de X % : ancienne valeur × (1 − X/100)."
+      ],
+      questions: [
+        { q: "Arrondir 12,47 à l'unité près.", options: ["12", "12,4", "12,5", "13"], correct: 0, explication: "Le chiffre après la virgule (4) est inférieur à 5 : on garde 12." },
+        { q: "Arrondir 8,76 à l'unité près.", options: ["8", "8,7", "9", "9,8"], correct: 2, explication: "Le chiffre après la virgule (7) est ≥ 5 : on arrondit à 9." },
+        { q: "Arrondir 45,234 au dixième près.", options: ["45,2", "45,3", "45,23", "45"], correct: 0, explication: "Le chiffre après le dixième (3) est < 5 : on garde 45,2." },
+        { q: "Arrondir 3,678 au centième près.", options: ["3,67", "3,68", "3,7", "3,6"], correct: 1, explication: "Le chiffre après le centième (8) est ≥ 5 : on arrondit à 3,68." },
+        { q: "Arrondir 237 à la dizaine la plus proche.", options: ["230", "235", "240", "250"], correct: 2, explication: "Le chiffre des unités (7) est ≥ 5 : on arrondit à 240." },
+        { q: "Quel est 20 % de 150 ?", options: ["20", "25", "30", "35"], correct: 2, explication: "150 × 20 ÷ 100 = 30." },
+        { q: "Quel est 15 % de 80 ?", options: ["8", "10", "12", "15"], correct: 2, explication: "80 × 15 ÷ 100 = 12." },
+        { q: "Un produit coûte 50 € avec une remise de 10 %. Quel est le nouveau prix ?", options: ["40 €", "44 €", "45 €", "48 €"], correct: 2, explication: "50 × (1 − 0,10) = 50 × 0,9 = 45 €." },
+        { q: "Un stock de 200 unités augmente de 25 %. Quel est le nouveau stock ?", options: ["220", "225", "240", "250"], correct: 3, explication: "200 × 1,25 = 250 unités." },
+        { q: "Sur 400 colis expédiés, 20 sont arrivés endommagés. Quel est le taux de casse ?", options: ["2 %", "5 %", "8 %", "10 %"], correct: 1, explication: "20 ÷ 400 = 0,05 = 5 %." },
+        { q: "Un entrepôt de 500 palettes en contient actuellement 375. Quel est le taux de remplissage ?", options: ["65 %", "70 %", "75 %", "80 %"], correct: 2, explication: "375 ÷ 500 = 0,75 = 75 %." },
+        { q: "Une commande de 120 articles a un taux d'erreur de 5 %. Combien d'articles sont concernés ?", options: ["5", "6", "8", "10"], correct: 1, explication: "120 × 5 ÷ 100 = 6 articles." },
+        { q: "Un salaire de 1 800 € augmente de 3 %. Quel est le nouveau montant ?", options: ["1 803 €", "1 830 €", "1 854 €", "1 900 €"], correct: 2, explication: "1800 × 1,03 = 1 854 €." },
+        { q: "Arrondir 1 249 à la centaine la plus proche.", options: ["1 200", "1 240", "1 250", "1 300"], correct: 0, explication: "Le chiffre des dizaines (4) est < 5 : on arrondit à 1 200." },
+        { q: "Un prix de 89,99 € est arrondi à l'euro. Quel est le résultat ?", options: ["89 €", "89,50 €", "90 €", "91 €"], correct: 2, explication: "0,99 est ≥ 0,5 : on arrondit à 90 €." },
+        { q: "Sur une palette de 1 000 kg, 8 % du poids correspond à l'emballage. Quel est ce poids ?", options: ["60 kg", "80 kg", "100 kg", "120 kg"], correct: 1, explication: "1000 × 8 ÷ 100 = 80 kg." },
+        { q: "Un transporteur applique une majoration de 12 % sur un tarif de 250 €. Quel est le nouveau tarif ?", options: ["260 €", "262 €", "275 €", "280 €"], correct: 3, explication: "250 × 1,12 = 280 €." },
+        { q: "Un taux de service de 96 % sur 250 commandes : combien ont été livrées correctement ?", options: ["234", "238", "240", "245"], correct: 2, explication: "250 × 0,96 = 240 commandes." },
+        { q: "Arrondir 67,5 à l'unité près.", options: ["67", "67,5", "68", "70"], correct: 2, explication: "0,5 s'arrondit vers le haut : on obtient 68." },
+        { q: "Un stock de 340 unités diminue de 15 %. Combien reste-t-il d'unités (arrondi à l'unité) ?", options: ["279", "285", "289", "295"], correct: 2, explication: "340 × 0,85 = 289 unités." }
+      ]
+    }
+  ],
+  geo: [
+    {
+      id: "geo-capitales-europe",
+      titre: "Capitales et pays d'Europe",
+      description: "20 capitales européennes à connaître — utile pour situer fournisseurs et clients.",
+      rappel: [
+        "Beaucoup d'échanges commerciaux de la France se font avec ses voisins européens.",
+        "Savoir situer les grandes capitales aide à comprendre les distances et les délais de transport."
+      ],
+      questions: [
+        { q: "Quelle est la capitale de la France ?", options: ["Lyon", "Paris", "Marseille", "Toulouse"], correct: 1, explication: "Paris est la capitale de la France." },
+        { q: "Quelle est la capitale de l'Allemagne ?", options: ["Munich", "Berlin", "Hambourg", "Francfort"], correct: 1, explication: "Berlin est la capitale de l'Allemagne." },
+        { q: "Quelle est la capitale de l'Espagne ?", options: ["Barcelone", "Madrid", "Séville", "Valence"], correct: 1, explication: "Madrid est la capitale de l'Espagne." },
+        { q: "Quelle est la capitale de l'Italie ?", options: ["Milan", "Rome", "Naples", "Turin"], correct: 1, explication: "Rome est la capitale de l'Italie." },
+        { q: "Quelle est la capitale du Royaume-Uni ?", options: ["Manchester", "Londres", "Liverpool", "Birmingham"], correct: 1, explication: "Londres est la capitale du Royaume-Uni." },
+        { q: "Quelle est la capitale des Pays-Bas ?", options: ["Rotterdam", "Amsterdam", "La Haye", "Utrecht"], correct: 1, explication: "Amsterdam est la capitale officielle des Pays-Bas." },
+        { q: "Quelle est la capitale de la Belgique ?", options: ["Anvers", "Bruxelles", "Gand", "Liège"], correct: 1, explication: "Bruxelles est la capitale de la Belgique." },
+        { q: "Quelle est la capitale du Portugal ?", options: ["Porto", "Lisbonne", "Faro", "Braga"], correct: 1, explication: "Lisbonne est la capitale du Portugal." },
+        { q: "Quelle est la capitale de la Pologne ?", options: ["Cracovie", "Varsovie", "Gdansk", "Wroclaw"], correct: 1, explication: "Varsovie est la capitale de la Pologne." },
+        { q: "Quelle est la capitale de la Suisse ?", options: ["Genève", "Zurich", "Berne", "Bâle"], correct: 2, explication: "Berne est la capitale de la Suisse." },
+        { q: "Quelle est la capitale de l'Autriche ?", options: ["Salzbourg", "Vienne", "Graz", "Innsbruck"], correct: 1, explication: "Vienne est la capitale de l'Autriche." },
+        { q: "Quelle est la capitale de la Suède ?", options: ["Göteborg", "Stockholm", "Malmö", "Uppsala"], correct: 1, explication: "Stockholm est la capitale de la Suède." },
+        { q: "Quelle est la capitale de la Norvège ?", options: ["Bergen", "Oslo", "Trondheim", "Stavanger"], correct: 1, explication: "Oslo est la capitale de la Norvège." },
+        { q: "Quelle est la capitale du Danemark ?", options: ["Aarhus", "Copenhague", "Odense", "Aalborg"], correct: 1, explication: "Copenhague est la capitale du Danemark." },
+        { q: "Quelle est la capitale de la Finlande ?", options: ["Tampere", "Helsinki", "Turku", "Oulu"], correct: 1, explication: "Helsinki est la capitale de la Finlande." },
+        { q: "Quelle est la capitale de la Grèce ?", options: ["Thessalonique", "Athènes", "Patras", "Héraklion"], correct: 1, explication: "Athènes est la capitale de la Grèce." },
+        { q: "Quelle est la capitale de l'Irlande ?", options: ["Cork", "Dublin", "Galway", "Limerick"], correct: 1, explication: "Dublin est la capitale de l'Irlande." },
+        { q: "Quelle est la capitale de la République tchèque ?", options: ["Brno", "Prague", "Ostrava", "Plzen"], correct: 1, explication: "Prague est la capitale de la République tchèque." },
+        { q: "Quelle est la capitale de la Hongrie ?", options: ["Debrecen", "Budapest", "Szeged", "Pécs"], correct: 1, explication: "Budapest est la capitale de la Hongrie." },
+        { q: "Quelle est la capitale de la Roumanie ?", options: ["Cluj-Napoca", "Bucarest", "Timisoara", "Iasi"], correct: 1, explication: "Bucarest est la capitale de la Roumanie." }
+      ]
+    },
+    {
+      id: "geo-france",
+      titre: "Régions et repères de France",
+      description: "Régions, ports et grands axes logistiques français.",
+      rappel: [
+        "La France est découpée en régions, chacune avec ses spécificités économiques.",
+        "Les grands ports et aéroports français sont des points de passage essentiels pour le commerce international."
+      ],
+      questions: [
+        { q: "Dans quelle région se trouve la ville de Nîmes ?", options: ["Provence-Alpes-Côte d'Azur", "Occitanie", "Auvergne-Rhône-Alpes", "Nouvelle-Aquitaine"], correct: 1, explication: "Nîmes se situe dans la région Occitanie." },
+        { q: "Quel est le plus grand port maritime de France ?", options: ["Marseille", "Le Havre", "Dunkerque", "Bordeaux"], correct: 0, explication: "Le port de Marseille-Fos est le premier port de France en tonnage." },
+        { q: "Quelle ville est un important port du nord de la France, sur la Manche ?", options: ["Lille", "Calais", "Amiens", "Reims"], correct: 1, explication: "Calais est un port majeur pour les échanges avec le Royaume-Uni." },
+        { q: "Quelle région française est frontalière de l'Espagne ?", options: ["Bretagne", "Occitanie", "Grand Est", "Normandie"], correct: 1, explication: "L'Occitanie partage une frontière avec l'Espagne, via les Pyrénées." },
+        { q: "Quelle est la région française la plus peuplée ?", options: ["Auvergne-Rhône-Alpes", "Île-de-France", "Hauts-de-France", "Occitanie"], correct: 1, explication: "L'Île-de-France, autour de Paris, est la région la plus peuplée." },
+        { q: "Quel est le grand port situé à l'embouchure de la Seine ?", options: ["Rouen", "Le Havre", "Nantes", "Brest"], correct: 1, explication: "Le Havre est situé à l'embouchure de la Seine, en Normandie." },
+        { q: "Dans quelle région se situe Lyon, importante plateforme logistique ?", options: ["Bourgogne-Franche-Comté", "Auvergne-Rhône-Alpes", "Centre-Val de Loire", "Grand Est"], correct: 1, explication: "Lyon se trouve en Auvergne-Rhône-Alpes." },
+        { q: "Quel massif montagneux sépare la France de l'Espagne ?", options: ["Les Alpes", "Le Massif Central", "Les Pyrénées", "Les Vosges"], correct: 2, explication: "Les Pyrénées forment la frontière naturelle entre la France et l'Espagne." },
+        { q: "Quelle région française borde l'Allemagne, la Belgique, le Luxembourg et la Suisse ?", options: ["Bourgogne-Franche-Comté", "Grand Est", "Hauts-de-France", "Normandie"], correct: 1, explication: "Le Grand Est est frontalier de ces quatre pays." },
+        { q: "Quel est le principal aéroport de fret en France ?", options: ["Orly", "Roissy-Charles de Gaulle", "Nice", "Toulouse-Blagnac"], correct: 1, explication: "Roissy-Charles de Gaulle est le premier aéroport français pour le fret." },
+        { q: "Quelle mer borde Nîmes et sa région ?", options: ["L'océan Atlantique", "La mer Méditerranée", "La Manche", "La mer du Nord"], correct: 1, explication: "Le Gard et l'Occitanie sont bordés par la mer Méditerranée." },
+        { q: "Quel département a pour préfecture Nîmes ?", options: ["L'Hérault", "Le Gard", "Les Bouches-du-Rhône", "Le Vaucluse"], correct: 1, explication: "Nîmes est la préfecture du département du Gard." },
+        { q: "Quelle région regroupe la Bretagne, importante pour la logistique agroalimentaire ?", options: ["Bretagne", "Pays de la Loire", "Normandie", "Centre-Val de Loire"], correct: 0, explication: "La Bretagne est une grande région agroalimentaire française." },
+        { q: "Quel fleuve traverse Lyon et sert au transport fluvial de marchandises ?", options: ["La Loire", "Le Rhône", "La Garonne", "La Seine"], correct: 1, explication: "Le Rhône traverse Lyon et permet un transport fluvial de marchandises." },
+        { q: "Quelle grande ville du sud-ouest est un pôle logistique lié à l'aéronautique ?", options: ["Bordeaux", "Toulouse", "Pau", "Biarritz"], correct: 1, explication: "Toulouse est un pôle majeur de l'industrie aéronautique (Airbus)." },
+        { q: "Quel tunnel relie la France au Royaume-Uni ?", options: ["Le tunnel du Mont-Blanc", "Le tunnel sous la Manche", "Le tunnel du Fréjus", "Le tunnel de Toulon"], correct: 1, explication: "Le tunnel sous la Manche relie la France au Royaume-Uni." },
+        { q: "Quelle est la préfecture de la région Occitanie ?", options: ["Nîmes", "Montpellier", "Toulouse", "Perpignan"], correct: 2, explication: "Toulouse est la préfecture de la région Occitanie." },
+        { q: "Quel est le principal port de commerce du sud de la France, proche de Marseille ?", options: ["Fos-sur-Mer", "Sète", "Toulon", "La Ciotat"], correct: 0, explication: "Fos-sur-Mer fait partie du grand port maritime de Marseille." },
+        { q: "Quelle région française est la plus étendue en superficie ?", options: ["Nouvelle-Aquitaine", "Occitanie", "Auvergne-Rhône-Alpes", "Grand Est"], correct: 0, explication: "La Nouvelle-Aquitaine est la région la plus vaste de France." },
+        { q: "Quel axe autoroutier relie Paris à Marseille, très emprunté pour le fret ?", options: ["L'A10", "L'A6-A7 (« autoroute du Soleil »)", "L'A20", "L'A31"], correct: 1, explication: "L'A6 puis l'A7 forment l'autoroute du Soleil, reliant Paris à Marseille." }
+      ]
+    },
+    {
+      id: "geo-monde-logistique",
+      titre: "Géographie et logistique mondiale",
+      description: "Canaux, ports, routes maritimes : les repères essentiels du commerce international.",
+      rappel: [
+        "Le commerce mondial s'appuie sur de grands axes maritimes, des canaux stratégiques et des ports géants.",
+        "Connaître ces repères aide à comprendre les délais et les coûts de transport international."
+      ],
+      questions: [
+        { q: "Quel canal relie la mer Méditerranée à la mer Rouge ?", options: ["Le canal de Panama", "Le canal de Suez", "Le canal de Corinthe", "Le canal de Kiel"], correct: 1, explication: "Le canal de Suez, en Égypte, évite le contournement de l'Afrique." },
+        { q: "Quel canal relie l'Atlantique au Pacifique en Amérique centrale ?", options: ["Le canal de Suez", "Le canal de Panama", "Le canal du Nicaragua", "Le canal du Mozambique"], correct: 1, explication: "Le canal de Panama traverse l'Amérique centrale." },
+        { q: "Quel pays est aujourd'hui le premier exportateur mondial de marchandises en volume ?", options: ["États-Unis", "Allemagne", "Chine", "Japon"], correct: 2, explication: "La Chine est le premier exportateur mondial de marchandises." },
+        { q: "Quel est le plus grand port à conteneurs du monde ?", options: ["Rotterdam", "Singapour", "Shanghai", "Los Angeles"], correct: 2, explication: "Le port de Shanghai est le plus grand port à conteneurs au monde." },
+        { q: "Quel est le plus grand port maritime d'Europe ?", options: ["Hambourg", "Anvers", "Rotterdam", "Marseille"], correct: 2, explication: "Le port de Rotterdam, aux Pays-Bas, est le premier port d'Europe." },
+        { q: "Quel océan faut-il traverser pour expédier une marchandise de Chine vers la côte ouest des États-Unis ?", options: ["L'océan Atlantique", "L'océan Pacifique", "L'océan Indien", "L'océan Arctique"], correct: 1, explication: "L'océan Pacifique sépare l'Asie de l'Amérique du Nord." },
+        { q: "Combien de fuseaux horaires compte la Terre, en théorie ?", options: ["12", "20", "24", "30"], correct: 2, explication: "La Terre est théoriquement découpée en 24 fuseaux horaires." },
+        { q: "Quel détroit sépare l'Espagne du Maroc, point de passage stratégique du commerce maritime ?", options: ["Le détroit de Gibraltar", "Le détroit de Bering", "Le détroit d'Ormuz", "Le détroit de Malacca"], correct: 0, explication: "Le détroit de Gibraltar relie la Méditerranée à l'Atlantique." },
+        { q: "Quel détroit, entre l'Indonésie et la Malaisie, est un axe majeur du commerce vers l'Asie ?", options: ["Le détroit de Gibraltar", "Le détroit de Malacca", "Le détroit d'Ormuz", "Le détroit du Bosphore"], correct: 1, explication: "Le détroit de Malacca est l'un des passages maritimes les plus fréquentés au monde." },
+        { q: "Quel pays est traditionnellement le premier partenaire commercial de la France en Europe ?", options: ["L'Espagne", "L'Italie", "L'Allemagne", "La Belgique"], correct: 2, explication: "L'Allemagne est historiquement le premier partenaire commercial de la France." },
+        { q: "Quel océan borde à la fois l'Europe et l'Amérique du Nord ?", options: ["L'océan Pacifique", "L'océan Atlantique", "L'océan Indien", "L'océan Arctique"], correct: 1, explication: "L'océan Atlantique sépare l'Europe de l'Amérique du Nord." },
+        { q: "Quelle organisation internationale fixe les grandes règles du commerce mondial ?", options: ["L'ONU", "L'OMC", "L'OTAN", "Le FMI"], correct: 1, explication: "L'Organisation Mondiale du Commerce (OMC) régule le commerce international." },
+        { q: "Sur quel continent se trouvent aujourd'hui la plupart des plus grands ports à conteneurs du monde ?", options: ["Europe", "Amérique du Nord", "Asie", "Afrique"], correct: 2, explication: "La majorité des plus grands ports à conteneurs se situent en Asie." },
+        { q: "Quelle unité standardisée mesure la capacité de transport de conteneurs ?", options: ["Le kilogramme", "L'EVP (équivalent vingt pieds)", "Le mètre cube", "La tonne"], correct: 1, explication: "L'EVP (ou TEU en anglais) est l'unité de référence pour compter les conteneurs." },
+        { q: "Quel pays est le premier producteur mondial d'électronique grand public, largement exporté par voie maritime ?", options: ["Les États-Unis", "La Chine", "L'Allemagne", "La Corée du Sud"], correct: 1, explication: "La Chine domine la production mondiale d'électronique grand public." },
+        { q: "Quelle mer sépare l'Europe du sud et l'Afrique du Nord ?", options: ["La mer Baltique", "La mer Méditerranée", "La mer Noire", "La mer Caspienne"], correct: 1, explication: "La mer Méditerranée sépare l'Europe du sud de l'Afrique du Nord." },
+        { q: "Quel pays d'Amérique du Sud est le premier exportateur mondial de café ?", options: ["La Colombie", "Le Brésil", "Le Pérou", "L'Équateur"], correct: 1, explication: "Le Brésil est le premier producteur et exportateur mondial de café." },
+        { q: "Quel mode de transport est privilégié pour les marchandises volumineuses sur de longues distances internationales ?", options: ["Le transport aérien", "Le transport maritime", "Le transport routier", "Le transport ferroviaire"], correct: 1, explication: "Le transport maritime domine pour les gros volumes sur longue distance, grâce à son faible coût." },
+        { q: "Quel pays européen est un hub logistique majeur grâce au port de Rotterdam ?", options: ["Le Danemark", "Les Pays-Bas", "La Suède", "La Finlande"], correct: 1, explication: "Les Pays-Bas, via Rotterdam, sont une porte d'entrée majeure du commerce européen." },
+        { q: "Quelle chaîne de montagnes marque la frontière conventionnelle entre l'Europe et l'Asie ?", options: ["Les Alpes", "Les Carpates", "L'Oural", "Les Pyrénées"], correct: 2, explication: "La chaîne de l'Oural, en Russie, marque cette frontière conventionnelle." }
+      ]
+    }
+  ]
+};
 
   const GROUPES = ["1L1", "1L2", "2BGATL1", "2BGATL2", "TCAPOL2"];
 
@@ -888,11 +1104,21 @@
     pole1AllNotes: {},
     pole2Notes: {},
     pole2AllNotes: {},
+    entrainementView: "list",   // list | rappel | playing | result
+    activeQuizMatiere: null,
+    activeQuizId: null,
+    quizIndex: 0,
+    quizScore: 0,
+    quizSelected: null,
+    quizAnswered: false,
+    entrainementScores: {},
+    entrainementAllScores: {},
     botTyping: false,
     loginError: "",
     setupError: "",
     adminError: "",
     adminGroupeFilter: "",
+    adminSearchQuery: "",
     storageErrorReason: null
   };
 
@@ -1057,6 +1283,26 @@
     }catch(e){
       showToast("Échec du téléchargement du fichier.");
     }
+  }
+
+  function downloadTextFile(text, filename, mime){
+    try{
+      const blob = new Blob(["\uFEFF" + text], { type: mime || "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }catch(e){
+      showToast("Échec du téléchargement du fichier.");
+    }
+  }
+
+  function csvEscape(v){
+    const s = v === null || v === undefined ? "" : String(v);
+    if(/[";\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
   }
 
   /* ============ CORRECTION AUTOMATIQUE DES FICHIERS EXCEL ============ */
@@ -1509,6 +1755,33 @@
     reader.readAsArrayBuffer(file);
   }
 
+  /* ---- Quiz d'entraînement (Calcul / Géo) ---- */
+  function getQuizById(matiere, quizId){
+    return (QUIZZES[matiere] || []).find(q => q.id === quizId);
+  }
+
+  async function loadEntrainementScores(){
+    try{
+      const snap = await dbRefGroupe(`entrainementScores/${state.currentUser.matricule}`).get();
+      state.entrainementScores = snap.val() || {};
+    }catch(e){ state.entrainementScores = {}; }
+  }
+
+  async function loadAllEntrainementScores(){
+    try{
+      const snap = await dbRefGroupe("entrainementScores").get();
+      state.entrainementAllScores = snap.val() || {};
+    }catch(e){ state.entrainementAllScores = {}; }
+  }
+
+  async function saveEntrainementScore(quizId, score, total){
+    const record = { score, total, date: Date.now() };
+    state.entrainementScores[quizId] = record;
+    try{
+      await dbRefGroupe(`entrainementScores/${state.currentUser.matricule}`).update({ [quizId]: record });
+    }catch(e){ showToast("Échec de l'enregistrement du score."); }
+  }
+
 
   /* ---- Correction étude de cas Brasseries du Gâtinais ---- */
   function normAccentless(s){
@@ -1759,6 +2032,7 @@
       else if(state.view === "code-lock") renderCodeLock(content);
       else if(state.view === "cours-docs") renderCoursDocs(content);
       else if(state.view === "referentiel") renderReferentiel(content);
+      else if(state.view === "livret") renderLivret(content);
       else if(state.view === "module") renderModule(content);
     }
   }
@@ -1878,6 +2152,7 @@
     const activiteTiles = MODULES.filter(m => ["picking","reception","transport"].includes(m.id)).map(tileHTML).join("");
     const coursTiles = MODULES.filter(m => m.category === "cours").map(tileHTML).join("");
     const etudeDeCasTiles = MODULES.filter(m => m.category === "etude-de-cas").map(tileHTML).join("");
+    const entrainementTiles = MODULES.filter(m => m.category === "entrainement").map(tileHTML).join("");
 
     const adminTile = state.currentUser.role === "enseignant" ? `
       <div class="admin-tile-row">
@@ -1895,6 +2170,11 @@
           <span class="code">COURS</span>
           <div class="title">Documents de cours</div>
           <div class="desc">Fiches de cours et activités à télécharger et imprimer (usage enseignant).</div>
+        </button>
+        <button class="module-tile admin" id="livretTile">
+          <span class="code">LIVRET</span>
+          <div class="title">Livret de compétences</div>
+          <div class="desc">Toutes les notes d'un groupe centralisées, avec export CSV.</div>
         </button>
       </div>
     ` : "";
@@ -1944,6 +2224,9 @@
       <div class="section-heading"><span>Étude de cas</span></div>
       <div class="module-grid">${etudeDeCasTiles}</div>
 
+      <div class="section-heading"><span>Entraînement</span></div>
+      <div class="module-grid">${entrainementTiles}</div>
+
       <footer class="site-footer">Lycée professionnel Gaston Darboux — 7 rue Jules Raimu, Nîmes · Bac Pro Métiers de la Logistique</footer>
     `;
 
@@ -1951,6 +2234,11 @@
       document.getElementById("adminTile").addEventListener("click", () => { state.view = "admin"; render(); });
       document.getElementById("coursDocsTile").addEventListener("click", () => { state.view = "cours-docs"; render(); });
       document.getElementById("referentielTile").addEventListener("click", () => { state.view = "referentiel"; render(); });
+      document.getElementById("livretTile").addEventListener("click", () => {
+        state.pendingModule = "livret";
+        state.view = "groupe-select";
+        render();
+      });
     }
     content.querySelectorAll(".module-tile[data-module]").forEach(btn => {
       btn.addEventListener("click", async () => {
@@ -2045,6 +2333,26 @@
       } else {
         await loadPole2Notes();
       }
+    }
+    if(moduleId === "calcul" || moduleId === "geo"){
+      state.entrainementView = "list";
+      state.activeQuizMatiere = moduleId;
+      state.activeQuizId = null;
+      if(state.currentUser.role === "enseignant"){
+        await loadAllEntrainementScores();
+      } else {
+        await loadEntrainementScores();
+      }
+    }
+    if(moduleId === "livret"){
+      await loadAllExcelNotes();
+      await loadAllPole1Notes();
+      await loadAllPole2Notes();
+      await loadAllPole3Notes();
+      await loadAllBrasserieNotes();
+      state.view = "livret";
+      render();
+      return;
     }
     state.view = "module";
     render();
@@ -2175,6 +2483,112 @@
   }
 
   /* ============ RENDER : RÉFÉRENTIEL DES COMPÉTENCES (enseignant uniquement) ============ */
+  /* ============ RENDER : LIVRET DE COMPÉTENCES (enseignant uniquement) ============ */
+  function livretCategoryAvg(notesObj, idsList){
+    if(!notesObj) return null;
+    const vals = idsList.filter(id => notesObj[id]).map(id => notesObj[id].note);
+    if(vals.length === 0) return null;
+    return vals.reduce((a,b) => a+b, 0) / vals.length;
+  }
+
+  function renderLivret(content){
+    const students = state.users.filter(u => u.role === "eleve" && u.groupe === state.activeGroupe);
+    const excelIds = EXCEL_STEPS.filter(s => s.autoGrade).map(s => s.id);
+    const pole1Ids = POLE1_EXERCICES.map(e => e.id);
+    const pole2Ids = POLE2_EXERCICES.map(e => e.id);
+    const pole3Ids = POLE3_EXERCICES.map(e => e.id);
+
+    function rowFor(st){
+      const excelAvg = livretCategoryAvg(state.excelAllNotes[st.matricule], excelIds);
+      const p1Avg = livretCategoryAvg(state.pole1AllNotes[st.matricule], pole1Ids);
+      const p2Avg = livretCategoryAvg(state.pole2AllNotes[st.matricule], pole2Ids);
+      const p3Avg = livretCategoryAvg(state.pole3AllNotes[st.matricule], pole3Ids);
+      const brasserieRec = state.brasserieAllNotes[st.matricule];
+      const brasserieNote = brasserieRec ? brasserieRec.note : null;
+      const cats = [excelAvg, p1Avg, p2Avg, p3Avg, brasserieNote].filter(v => v !== null);
+      const overall = cats.length > 0 ? cats.reduce((a,b) => a+b, 0) / cats.length : null;
+      return { st, excelAvg, p1Avg, p2Avg, p3Avg, brasserieNote, overall };
+    }
+
+    const fmt = (v) => v === null ? "—" : `${v.toFixed(1)}/20`;
+
+    const rows = students.map(rowFor);
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      <button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>
+      <button class="btn-ghost no-print" id="exportCsvBtn" style="margin-left:16px;">Exporter en CSV</button>
+      <div class="menu-intro" style="margin-top:16px;">
+        <h1>Livret de compétences — groupe ${state.activeGroupe}</h1>
+        <p>Vue d'ensemble des notes obtenues par chaque élève sur l'ensemble des modules notés de la Suite Logistique.</p>
+      </div>
+      ${students.length === 0 ? `<div class="empty-state">Aucun élève dans ce groupe.</div>` : `
+        <div class="panel">
+          <table>
+            <thead><tr>
+              <th>Élève</th><th>Excel</th><th>Pôle 1</th><th>Pôle 2</th><th>Pôle 3</th><th>Brasserie</th><th>Moyenne générale</th>
+            </tr></thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr>
+                  <td>${r.st.nom}</td>
+                  <td style="text-align:center;">${fmt(r.excelAvg)}</td>
+                  <td style="text-align:center;">${fmt(r.p1Avg)}</td>
+                  <td style="text-align:center;">${fmt(r.p2Avg)}</td>
+                  <td style="text-align:center;">${fmt(r.p3Avg)}</td>
+                  <td style="text-align:center;">${fmt(r.brasserieNote)}</td>
+                  <td style="text-align:center; font-weight:700;">${fmt(r.overall)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+        <p class="hint" style="margin-top:10px;">Chaque colonne de pôle est la moyenne des exercices notés de ce pôle. La moyenne générale est la moyenne des colonnes renseignées (pas de pénalité pour un module non encore fait).</p>
+      `}
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    document.getElementById("changeGroupeBtn").addEventListener("click", () => {
+      state.pendingModule = "livret";
+      state.view = "groupe-select";
+      render();
+    });
+
+    const exportBtn = document.getElementById("exportCsvBtn");
+    if(exportBtn){
+      exportBtn.addEventListener("click", () => {
+        const header = [
+          "Nom", "Matricule",
+          ...EXCEL_STEPS.filter(s => s.autoGrade).map(s => `Excel ${s.competence || s.code}`),
+          ...POLE1_EXERCICES.map(e => e.competence),
+          ...POLE2_EXERCICES.map(e => e.competence),
+          ...POLE3_EXERCICES.map(e => e.competence),
+          "Brasseries du Gâtinais",
+          "Moyenne Excel", "Moyenne Pôle 1", "Moyenne Pôle 2", "Moyenne Pôle 3", "Moyenne générale"
+        ];
+        const lines = [header.map(csvEscape).join(";")];
+        rows.forEach(r => {
+          const excelVals = excelIds.map(id => (state.excelAllNotes[r.st.matricule] && state.excelAllNotes[r.st.matricule][id]) ? state.excelAllNotes[r.st.matricule][id].note : "");
+          const p1Vals = pole1Ids.map(id => (state.pole1AllNotes[r.st.matricule] && state.pole1AllNotes[r.st.matricule][id]) ? state.pole1AllNotes[r.st.matricule][id].note : "");
+          const p2Vals = pole2Ids.map(id => (state.pole2AllNotes[r.st.matricule] && state.pole2AllNotes[r.st.matricule][id]) ? state.pole2AllNotes[r.st.matricule][id].note : "");
+          const p3Vals = pole3Ids.map(id => (state.pole3AllNotes[r.st.matricule] && state.pole3AllNotes[r.st.matricule][id]) ? state.pole3AllNotes[r.st.matricule][id].note : "");
+          const row = [
+            r.st.nom, r.st.matricule,
+            ...excelVals, ...p1Vals, ...p2Vals, ...p3Vals,
+            r.brasserieNote !== null ? r.brasserieNote : "",
+            r.excelAvg !== null ? r.excelAvg.toFixed(1) : "",
+            r.p1Avg !== null ? r.p1Avg.toFixed(1) : "",
+            r.p2Avg !== null ? r.p2Avg.toFixed(1) : "",
+            r.p3Avg !== null ? r.p3Avg.toFixed(1) : "",
+            r.overall !== null ? r.overall.toFixed(1) : ""
+          ];
+          lines.push(row.map(csvEscape).join(";"));
+        });
+        downloadTextFile(lines.join("\n"), `livret-competences-${state.activeGroupe}.csv`, "text/csv;charset=utf-8");
+      });
+    }
+  }
+
   function renderReferentiel(content){
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour au menu</button>
@@ -2209,9 +2623,19 @@
   function renderAdmin(content){
     if(!state.adminCodesGroupe) state.adminCodesGroupe = GROUPES[0];
     const filteredUsers = state.users.filter(u => {
-      if(!state.adminGroupeFilter) return true;
-      if(state.adminGroupeFilter === "__none__") return u.role === "eleve" && !u.groupe;
-      return u.groupe === state.adminGroupeFilter;
+      if(state.adminGroupeFilter){
+        if(state.adminGroupeFilter === "__none__"){
+          if(!(u.role === "eleve" && !u.groupe)) return false;
+        } else if(u.groupe !== state.adminGroupeFilter){
+          return false;
+        }
+      }
+      if(state.adminSearchQuery){
+        const q = state.adminSearchQuery.trim().toLowerCase();
+        const haystack = `${u.nom} ${u.matricule}`.toLowerCase();
+        if(!haystack.includes(q)) return false;
+      }
+      return true;
     });
     const codableModules = MODULES.filter(m => m.ready);
 
@@ -2257,6 +2681,7 @@
       <div class="panel" style="margin-top:18px;">
         <div class="table-head-row">
           <span class="table-title">Comptes existants (${filteredUsers.length}/${state.users.length})</span>
+          <input type="text" id="adminSearchInput" placeholder="Rechercher un nom ou un matricule…" value="${state.adminSearchQuery.replace(/"/g,"&quot;")}" style="max-width:220px;" />
           <select id="groupeFilter">
             <option value="">Tous les groupes</option>
             ${GROUPES.map(g => `<option value="${g}" ${state.adminGroupeFilter === g ? "selected" : ""}>${g}</option>`).join("")}
@@ -2342,6 +2767,17 @@
     document.getElementById("groupeFilter").addEventListener("change", (e) => {
       state.adminGroupeFilter = e.target.value;
       render();
+    });
+
+    document.getElementById("adminSearchInput").addEventListener("input", (e) => {
+      state.adminSearchQuery = e.target.value;
+      const cursorPos = e.target.selectionStart;
+      render();
+      const newInput = document.getElementById("adminSearchInput");
+      if(newInput){
+        newInput.focus();
+        newInput.setSelectionRange(cursorPos, cursorPos);
+      }
     });
 
     document.getElementById("rosterImportBtn").addEventListener("click", () => {
@@ -2445,6 +2881,8 @@
     else if(state.activeModule === "brasserie") renderModuleBrasserie(content);
     else if(state.activeModule === "pole1") renderModulePole1(content);
     else if(state.activeModule === "pole2") renderModulePole2(content);
+    else if(state.activeModule === "calcul") renderModuleEntrainement(content, "calcul");
+    else if(state.activeModule === "geo") renderModuleEntrainement(content, "geo");
   }
 
   /* ============ RENDER : MODULE MAGASIN ============ */
@@ -4119,7 +4557,205 @@
     });
   }
 
+  /* ============ RENDER : MODULE ENTRAÎNEMENT (Calcul / Géo) ============ */
+  function startQuiz(matiere, quizId){
+    state.activeQuizMatiere = matiere;
+    state.activeQuizId = quizId;
+    state.quizIndex = 0;
+    state.quizScore = 0;
+    state.quizSelected = null;
+    state.quizAnswered = false;
+    state.entrainementView = "rappel";
+    render();
+  }
+
+  function renderModuleEntrainement(content, matiere){
+    const isTeacher = state.currentUser.role === "enseignant";
+    if(!isTeacher && state.entrainementView === "rappel") return renderQuizRappel(content, matiere);
+    if(!isTeacher && state.entrainementView === "playing") return renderQuizPlaying(content, matiere);
+    if(!isTeacher && state.entrainementView === "result") return renderQuizResult(content, matiere);
+    return renderQuizList(content, matiere);
+  }
+
+  function renderQuizList(content, matiere){
+    const isTeacher = state.currentUser.role === "enseignant";
+    const quizzes = QUIZZES[matiere] || [];
+    const matiereLabel = matiere === "calcul" ? "Calcul" : "Géo";
+
+    const tilesHTML = quizzes.map(quiz => {
+      const scoreRec = !isTeacher ? state.entrainementScores[quiz.id] : null;
+      return `
+        <div class="excel-step ${scoreRec ? "done" : ""}">
+          <div class="excel-step-num">${scoreRec ? "✓" : "❓"}</div>
+          <div class="excel-step-body">
+            <div class="excel-step-title">${quiz.titre}</div>
+            <div class="excel-step-objectif">${quiz.description} (20 questions)</div>
+            ${scoreRec ? `<div class="excel-note-badge">Meilleur score : ${scoreRec.score}/${scoreRec.total}</div>` : ""}
+          </div>
+          <div class="excel-step-actions">
+            ${!isTeacher ? `<button class="btn btn-primary quiz-start-btn" data-quiz="${quiz.id}" style="width:auto;">${scoreRec ? "Recommencer" : "Commencer"}</button>` : ""}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    let classTrackingHTML = "";
+    if(isTeacher){
+      const students = state.users.filter(u => u.role === "eleve" && u.groupe === state.activeGroupe);
+      classTrackingHTML = `
+        <div class="panel" style="margin-top:18px;">
+          <h2>Suivi de la classe — groupe ${state.activeGroupe}</h2>
+          ${students.length === 0 ? `<div class="empty-state">Aucun élève dans ce groupe.</div>` : `
+            <table>
+              <thead><tr><th>Élève</th>${quizzes.map(q => `<th>${q.titre}</th>`).join("")}</tr></thead>
+              <tbody>
+                ${students.map(st => {
+                  const scores = state.entrainementAllScores[st.matricule] || {};
+                  return `<tr><td>${st.nom}</td>${quizzes.map(q => {
+                    const s = scores[q.id];
+                    return `<td style="text-align:center;">${s ? `${s.score}/${s.total}` : "—"}</td>`;
+                  }).join("")}</tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          `}
+        </div>
+      `;
+    }
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      <div class="menu-intro" style="margin-top:16px;">
+        <h1>Entraînement — ${matiereLabel}</h1>
+        <p>${isTeacher ? `Suivi des scores du groupe ${state.activeGroupe}.` : "Choisissez un quiz pour vous entraîner. Chaque quiz compte 20 questions à choix multiples, avec correction immédiate."}</p>
+      </div>
+      <div class="excel-steps-list">${tilesHTML}</div>
+      ${classTrackingHTML}
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    content.querySelectorAll(".quiz-start-btn").forEach(btn => {
+      btn.addEventListener("click", () => startQuiz(matiere, btn.dataset.quiz));
+    });
+  }
+
+  function renderQuizRappel(content, matiere){
+    const quiz = getQuizById(matiere, state.activeQuizId);
+    if(!quiz){ state.entrainementView = "list"; render(); return; }
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour à la liste</button>
+      <div class="panel" style="margin-top:16px;">
+        <h2>${quiz.titre}</h2>
+        <p class="hint" style="margin-bottom:14px;">${quiz.description}</p>
+        <div class="subsection-title">Rappel</div>
+        <ul class="rappel-list">
+          ${quiz.rappel.map(r => `<li>${r}</li>`).join("")}
+        </ul>
+        <button class="btn btn-primary" id="startQuizBtn" style="width:auto; margin-top:16px;">Commencer le quiz (20 questions)</button>
+      </div>
+    `;
+    document.getElementById("backBtn").addEventListener("click", () => { state.entrainementView = "list"; render(); });
+    document.getElementById("startQuizBtn").addEventListener("click", () => {
+      state.entrainementView = "playing";
+      render();
+    });
+  }
+
+  function renderQuizPlaying(content, matiere){
+    const quiz = getQuizById(matiere, state.activeQuizId);
+    if(!quiz){ state.entrainementView = "list"; render(); return; }
+    const q = quiz.questions[state.quizIndex];
+    const total = quiz.questions.length;
+    const isLast = state.quizIndex === total - 1;
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Abandonner et revenir à la liste</button>
+      <div class="panel" style="margin-top:16px;">
+        <div class="quiz-progress-row">
+          <span>Question ${state.quizIndex + 1} / ${total}</span>
+          <span>Score : ${state.quizScore} / ${state.quizIndex + (state.quizAnswered ? 1 : 0)}</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${Math.round((state.quizIndex / total) * 100)}%;"></div></div>
+        <h2 style="margin-top:18px;">${q.q}</h2>
+        <div class="quiz-options">
+          ${q.options.map((opt, i) => {
+            let cls = "quiz-option";
+            if(state.quizAnswered){
+              if(i === q.correct) cls += " correct";
+              else if(i === state.quizSelected) cls += " incorrect";
+            } else if(i === state.quizSelected){
+              cls += " selected";
+            }
+            return `<button class="${cls}" data-idx="${i}" ${state.quizAnswered ? "disabled" : ""}>${opt}</button>`;
+          }).join("")}
+        </div>
+        ${state.quizAnswered ? `
+          <div class="info-box" style="margin-top:14px;">${state.quizSelected === q.correct ? "✅ Bonne réponse ! " : "❌ Pas tout à fait. "}${q.explication}</div>
+          <button class="btn btn-primary" id="nextQuestionBtn" style="width:auto; margin-top:16px;">${isLast ? "Voir mon score" : "Question suivante"}</button>
+        ` : ""}
+      </div>
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => { state.entrainementView = "list"; render(); });
+
+    if(!state.quizAnswered){
+      content.querySelectorAll(".quiz-option").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = parseInt(btn.dataset.idx, 10);
+          state.quizSelected = idx;
+          state.quizAnswered = true;
+          if(idx === q.correct) state.quizScore++;
+          render();
+        });
+      });
+    } else {
+      document.getElementById("nextQuestionBtn").addEventListener("click", async () => {
+        if(isLast){
+          await saveEntrainementScore(quiz.id, state.quizScore, total);
+          state.entrainementView = "result";
+          render();
+        } else {
+          state.quizIndex++;
+          state.quizSelected = null;
+          state.quizAnswered = false;
+          render();
+        }
+      });
+    }
+  }
+
+  function renderQuizResult(content, matiere){
+    const quiz = getQuizById(matiere, state.activeQuizId);
+    if(!quiz){ state.entrainementView = "list"; render(); return; }
+    const total = quiz.questions.length;
+    const score = state.quizScore;
+    const pct = Math.round((score / total) * 100);
+    let message = "Continuez à vous entraîner !";
+    if(pct >= 90) message = "Excellent ! 🎉";
+    else if(pct >= 70) message = "Très bon résultat !";
+    else if(pct >= 50) message = "Pas mal, encore un peu d'entraînement.";
+
+    content.innerHTML = `
+      <div class="center-stage" style="min-height:40vh;">
+        <div class="badge-card">
+          <div class="badge-icon">SCORE</div>
+          <h1>${score} / ${total}</h1>
+          <p class="sub">${message}</p>
+          <button class="btn btn-primary" id="retryQuizBtn">Recommencer ce quiz</button>
+          <button class="btn-ghost" id="backToListBtn" style="width:100%; margin-top:8px;">Retour à la liste</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("retryQuizBtn").addEventListener("click", () => startQuiz(matiere, quiz.id));
+    document.getElementById("backToListBtn").addEventListener("click", () => {
+      state.entrainementView = "list";
+      render();
+    });
+  }
+
   /* ============ RENDER : MODULE BRASSERIE (étude de cas) ============ */
+  const BRASSERIE_PADLET_URL = "https://padlet.com/morintristan1/scenario-les-brasseries-du-gatinais-u8yjywfuo31t22cg";
+
   function renderModuleBrasserie(content){
     const isTeacher = state.currentUser.role === "enseignant";
     const noteRecord = !isTeacher ? state.brasserieNotes : null;
@@ -4130,13 +4766,18 @@
       classTrackingHTML = `
         <div class="panel" style="margin-top:18px;">
           <h2>Suivi de la classe — groupe ${state.activeGroupe}</h2>
+          <p class="hint" style="margin-bottom:12px;">L'activité se fait sur le Padlet, sans correction automatique : saisissez ici la note de chaque élève.</p>
           ${students.length === 0 ? `<div class="empty-state">Aucun élève dans ce groupe.</div>` : `
             <table>
-              <thead><tr><th>Élève</th><th>Note</th><th>Date</th></tr></thead>
+              <thead><tr><th>Élève</th><th>Note /20</th><th></th></tr></thead>
               <tbody>
                 ${students.map(st => {
                   const n = state.brasserieAllNotes[st.matricule];
-                  return `<tr><td>${st.nom}</td><td style="text-align:center;">${n ? `${n.note}/20 (${n.correct}/${n.total})` : "—"}</td><td>${n ? new Date(n.date).toLocaleDateString("fr-FR") : "—"}</td></tr>`;
+                  return `<tr>
+                    <td>${st.nom}</td>
+                    <td style="text-align:center;"><input type="number" min="0" max="20" step="0.5" class="brasserie-note-input" data-matricule="${st.matricule}" value="${n ? n.note : ""}" style="width:70px; text-align:center;" /></td>
+                    <td><button class="btn-ghost brasserie-save-note-btn" data-matricule="${st.matricule}" data-nom="${st.nom}" style="padding:4px 10px; font-size:12px;">Enregistrer</button></td>
+                  </tr>`;
                 }).join("")}
               </tbody>
             </table>
@@ -4150,21 +4791,17 @@
       ${isTeacher ? `<button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>` : ""}
       <div class="menu-intro" style="margin-top:16px;">
         <h1>Étude de cas — Les Brasseries du Gâtinais</h1>
-        <p>Palettisation, mise en stock et adressage. ${isTeacher ? `Suivi du groupe ${state.activeGroupe} ci-dessous.` : "Téléchargez le fichier, complétez-le dans Excel, puis renvoyez-le pour obtenir votre note."}</p>
+        <p>Palettisation, mise en stock et adressage. ${isTeacher ? `Saisissez la note de chaque élève ci-dessous.` : "L'activité se fait directement sur le Padlet ci-dessous."}</p>
       </div>
       <div class="excel-step ${noteRecord ? "done" : ""}">
         <div class="excel-step-num">${noteRecord ? "✓" : "📦"}</div>
         <div class="excel-step-body">
           <div class="excel-step-title">Scénario complet</div>
           <div class="excel-step-objectif">Calculez le poids et la hauteur de 3 palettes, déterminez leur possibilité de stockage selon 3 travées, puis répondez aux questions.</div>
-          ${noteRecord ? `<div class="excel-note-badge">Note : ${noteRecord.note}/20 (${noteRecord.correct}/${noteRecord.total})</div>` : ""}
+          ${noteRecord ? `<div class="excel-note-badge">Note : ${noteRecord.note}/20</div>` : ""}
         </div>
         <div class="excel-step-actions">
-          <button class="btn-ghost" id="brasserieDownloadBtn">Télécharger le fichier</button>
-          ${!isTeacher ? `
-            <input type="file" accept=".xlsx" id="brasserieUploadInput" style="display:none" />
-            <button class="btn-ghost" id="brasserieUploadBtn">Envoyer mon fichier pour correction</button>
-          ` : ""}
+          <button class="btn-ghost" id="brasseriePadletBtn">Ouvrir le Padlet</button>
         </div>
       </div>
       ${classTrackingHTML}
@@ -4180,21 +4817,29 @@
       });
     }
 
-    document.getElementById("brasserieDownloadBtn").addEventListener("click", () => {
-      downloadBase64File(BRASSERIE_FILE_B64, "Scenario-Brasseries-du-Gatinais.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    document.getElementById("brasseriePadletBtn").addEventListener("click", () => {
+      window.open(BRASSERIE_PADLET_URL, "_blank", "noopener");
     });
 
-    const uploadBtn = document.getElementById("brasserieUploadBtn");
-    if(uploadBtn){
-      uploadBtn.addEventListener("click", () => document.getElementById("brasserieUploadInput").click());
-      document.getElementById("brasserieUploadInput").addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if(!file) return;
-        showToast("Correction en cours…");
-        handleBrasserieUpload(file);
-        e.target.value = "";
+    content.querySelectorAll(".brasserie-save-note-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const matricule = btn.dataset.matricule;
+        const input = content.querySelector(`.brasserie-note-input[data-matricule="${matricule}"]`);
+        const note = parseFloat(input.value);
+        if(isNaN(note) || note < 0 || note > 20){
+          showToast("La note doit être un nombre entre 0 et 20.");
+          return;
+        }
+        const record = { note, date: Date.now() };
+        state.brasserieAllNotes[matricule] = record;
+        try{
+          await dbRefGroupeExplicit(state.activeGroupe, `brasserieNotes/${matricule}`).set(record);
+          showToast(`Note enregistrée pour ${btn.dataset.nom}.`);
+        }catch(e){
+          showToast("Échec de l'enregistrement de la note.");
+        }
       });
-    }
+    });
   }
 
   /* ============ RENDER : MODULE MESSAGERIE ============ */
