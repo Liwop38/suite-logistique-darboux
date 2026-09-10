@@ -674,15 +674,16 @@
     { id: "messagerie", code: "M-02", title: "Messagerie", desc: "Contactez votre enseignant, avec un premier retour automatique selon l'objet.", ready: true, category: "operations" },
     { id: "picking", code: "M-03", title: "Préparation de commandes", desc: "Sélectionnez les produits, imprimez le bon, validez le prélèvement en stock.", ready: true, category: "operations" },
     { id: "reception", code: "M-04", title: "Réception de commande", desc: "Contrôlez une livraison, imprimez le bon de contrôle, mettez à jour le stock.", ready: true, category: "operations" },
-    { id: "transport", code: "M-08", title: "Transport & tournées", desc: "Agenda des créneaux : temps fixe/variable, disponibilités personnel et transporteurs.", ready: true, category: "operations" },
-    { id: "excel", code: "M-05", title: "Apprendre Excel pas à pas", desc: "6 étapes progressives avec fichiers pratiques, sur des cas de logistique.", ready: true, category: "cours" },
-    { id: "pole1", code: "M-09", title: "Pôle 1 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C1.1 à C1.6).", ready: true, category: "cours" },
-    { id: "pole2", code: "M-10", title: "Pôle 2 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C2.1 à C2.6).", ready: true, category: "cours" },
-    { id: "pole3", code: "M-06", title: "Pôle 3 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C3.1 à C3.4).", ready: true, category: "cours" },
-    { id: "brasserie", code: "M-07", title: "Étude de cas — Brasseries du Gâtinais", desc: "Palettisation, mise en stock et adressage — exercice complet noté.", ready: true, category: "etude-de-cas" },
-    { id: "calcul", code: "ENTR-1", title: "Calcul", desc: "Proportionnalité, conversions, arrondis — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
-    { id: "geo", code: "ENTR-2", title: "Géo", desc: "Capitales, régions et repères utiles en logistique — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
-    { id: "francais", code: "ENTR-3", title: "Français", desc: "Accords, conjugaison, homophones — 3 quiz de 20 questions.", ready: true, category: "entrainement" }
+    { id: "excel", code: "M-05", title: "Apprendre Excel pas à pas", desc: "Progression pas à pas avec fichiers pratiques, sur des cas de logistique.", ready: true, category: "cours" },
+    { id: "pole1", code: "M-06", title: "Pôle 1 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C1.1 à C1.6).", ready: true, category: "cours" },
+    { id: "pole2", code: "M-07", title: "Pôle 2 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C2.1 à C2.6).", ready: true, category: "cours" },
+    { id: "pole3", code: "M-08", title: "Pôle 3 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C3.1 à C3.4).", ready: true, category: "cours" },
+    { id: "brasserie", code: "M-09", title: "Étude de cas — Brasseries du Gâtinais", desc: "Palettisation, mise en stock et adressage — exercice complet noté.", ready: true, category: "etude-de-cas" },
+    { id: "calcul", code: "M-10", title: "Calcul", desc: "Proportionnalité, conversions, arrondis — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
+    { id: "geo", code: "M-11", title: "Géo", desc: "Capitales, régions et repères utiles en logistique — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
+    { id: "francais", code: "M-12", title: "Français", desc: "Accords, conjugaison, homophones — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
+    { id: "transportAgenda", code: "M-13", title: "Agenda", desc: "Créneaux, temps fixe/variable, disponibilités personnel et transporteurs.", ready: true, category: "transport" },
+    { id: "transportFlotte", code: "M-14", title: "Flotte", desc: "Fiches véhicules : immatriculation, PTAC, charge utile, volume, statut.", ready: true, category: "transport" }
   ];
 
 /* ===== Utilitaires ===== */
@@ -3125,7 +3126,7 @@ const CALCUL_TEMPLATES = {
     { match: ["stock", "inventaire", "quantit"], reply: "Pour une question de gestion de stock : la table Stock du module « Base du magasin » relie un produit à un emplacement avec une quantité. Vérifiez que le produit et l'emplacement concernés existent déjà dans leurs tables respectives. Votre enseignant complétera si besoin." },
     { match: ["picking", "préparation de commande", "prepa commande"], reply: "Pour la préparation de commandes, pensez à l'ordre logique : vérifier le bon de commande, localiser l'emplacement via son code, prélever la quantité exacte, puis mettre à jour le stock. Votre enseignant reviendra vers vous pour les détails de l'exercice." },
     { match: ["emplacement", "allée", "zone", "entrepot", "entrepôt"], reply: "Pour les emplacements, le code suit en général une logique zone-allée-niveau (ex : A-03-02). Consultez la table Emplacements du module magasin pour voir les codes déjà créés. Votre enseignant vous précisera si besoin." },
-    { match: ["transport", "tourn", "livraison", "camion"], reply: "Les questions de transport et de tournées seront couvertes plus en détail dans le module dédié (bientôt disponible). Votre enseignant peut déjà vous orienter en attendant." },
+    { match: ["transport", "tourn", "livraison", "camion"], reply: "Pour les questions de transport et de tournées, consultez les modules « Agenda » et « Flotte » dans la section Transport du menu. Votre enseignant peut vous guider si besoin." },
     { match: ["fournisseur", "délai", "delai"], reply: "Pour les fournisseurs, la table Fournisseurs du module magasin recense le nom, le contact et le délai de livraison. Si l'info n'y figure pas encore, c'est à ajouter avant de continuer l'exercice." },
     { match: ["caces", "chariot", "engin"], reply: "Les questions sur la conduite d'engins et le CACES relèvent d'un encadrement pratique : votre enseignant vous répondra directement sur ce point." }
   ];
@@ -3503,10 +3504,11 @@ const CALCUL_TEMPLATES = {
     }
 
     const topTiles = MODULES.filter(m => ["magasin","messagerie"].includes(m.id)).map(tileHTML).join("");
-    const activiteTiles = MODULES.filter(m => ["picking","reception","transport"].includes(m.id)).map(tileHTML).join("");
+    const activiteTiles = MODULES.filter(m => ["picking","reception"].includes(m.id)).map(tileHTML).join("");
     const coursTiles = MODULES.filter(m => m.category === "cours").map(tileHTML).join("");
     const etudeDeCasTiles = MODULES.filter(m => m.category === "etude-de-cas").map(tileHTML).join("");
     const entrainementTiles = MODULES.filter(m => m.category === "entrainement").map(tileHTML).join("");
+    const transportTiles = MODULES.filter(m => m.category === "transport").map(tileHTML).join("");
 
     const adminTile = state.currentUser.role === "enseignant" ? `
       <div class="admin-tile-row">
@@ -3581,6 +3583,9 @@ const CALCUL_TEMPLATES = {
       <div class="section-heading"><span>Entraînement</span></div>
       <div class="module-grid">${entrainementTiles}</div>
 
+      <div class="section-heading"><span>Transport</span></div>
+      <div class="module-grid">${transportTiles}</div>
+
       <footer class="site-footer">Lycée professionnel Gaston Darboux — 7 rue Jules Raimu, Nîmes · Bac Pro Métiers de la Logistique</footer>
     `;
 
@@ -3651,11 +3656,14 @@ const CALCUL_TEMPLATES = {
       state.receptionView = "list";
       state.activeReceptionId = null;
     }
-    if(moduleId === "transport"){
+    if(moduleId === "transportAgenda"){
       await loadTransportData();
       state.transportView = "agenda";
       state.transportDate = state.transportDate || todayISO();
       state.transportConflictPreview = null;
+    }
+    if(moduleId === "transportFlotte"){
+      await loadTransportData();
     }
     if(moduleId === "excel"){
       if(state.currentUser.role === "enseignant"){
@@ -4301,7 +4309,8 @@ const CALCUL_TEMPLATES = {
     else if(state.activeModule === "messagerie") renderMessagerie(content);
     else if(state.activeModule === "picking") renderModulePicking(content);
     else if(state.activeModule === "reception") renderModuleReception(content);
-    else if(state.activeModule === "transport") renderModuleTransport(content);
+    else if(state.activeModule === "transportAgenda") renderModuleTransport(content);
+    else if(state.activeModule === "transportFlotte") renderModuleFlotte(content);
     else if(state.activeModule === "excel") renderModuleExcel(content);
     else if(state.activeModule === "pole3") renderModulePole3(content);
     else if(state.activeModule === "brasserie") renderModuleBrasserie(content);
@@ -5690,7 +5699,7 @@ const CALCUL_TEMPLATES = {
     const changeGroupeBtn = document.getElementById("changeGroupeBtn");
     if(changeGroupeBtn){
       changeGroupeBtn.addEventListener("click", () => {
-        state.pendingModule = "transport";
+        state.pendingModule = "transportAgenda";
         state.view = "groupe-select";
         render();
       });
@@ -5860,7 +5869,7 @@ const CALCUL_TEMPLATES = {
 
   function renderTransportReferentiels(content){
     const isTeacher = state.currentUser.role === "enseignant";
-    const tab = state.transportRefTab;
+    const tab = state.transportRefTab === "camions" ? "transporteurs" : state.transportRefTab;
 
     function tableFor(key, cols){
       const rows = state.moduleData[key];
@@ -5900,36 +5909,6 @@ const CALCUL_TEMPLATES = {
         </div>
         <button class="btn btn-primary" id="addRefBtn" style="width:auto; margin-top:10px;">Ajouter</button>
       `;
-    } else if(tab === "camions"){
-      tabContentHTML = `
-        <p class="hint" style="margin-bottom:12px;">Critères standards d'une fiche véhicule : immatriculation, marque/modèle, type, PTAC, charge utile, volume utile et statut.</p>
-        ${tableFor("camionsT", [
-          {key:"immat",label:"Immatriculation"}, {key:"marque",label:"Marque"}, {key:"modele",label:"Modèle"},
-          {key:"typeVehicule",label:"Type"}, {key:"ptac",label:"PTAC (kg)"}, {key:"chargeUtile",label:"Charge utile (kg)"},
-          {key:"volumeUtile",label:"Volume utile (m³)"}, {key:"statut",label:"Statut"}
-        ])}
-        <div class="admin-form-row" style="margin-top:14px;">
-          <div><label for="refImmat">Immatriculation</label><input id="refImmat" type="text" data-mono="true" placeholder="ex : GD-004-LOG" /></div>
-          <div><label for="refMarque">Marque</label><input id="refMarque" type="text" placeholder="ex : Renault" /></div>
-          <div><label for="refModele">Modèle</label><input id="refModele" type="text" placeholder="ex : Master" /></div>
-          <div><label for="refTypeVehicule">Type de véhicule</label>
-            <select id="refTypeVehicule">
-              <option>Camionnette</option><option>Fourgon</option><option>Porteur</option><option>Semi-remorque</option>
-            </select>
-          </div>
-        </div>
-        <div class="admin-form-row" style="margin-top:12px;">
-          <div><label for="refPtac">PTAC (kg)</label><input id="refPtac" type="number" min="0" value="3500" /></div>
-          <div><label for="refChargeUtile">Charge utile (kg)</label><input id="refChargeUtile" type="number" min="0" value="1400" /></div>
-          <div><label for="refVolumeUtile">Volume utile (m³)</label><input id="refVolumeUtile" type="number" min="0" step="0.5" value="12" /></div>
-          <div><label for="refStatut">Statut</label>
-            <select id="refStatut">
-              <option>Disponible</option><option>En tournée</option><option>En maintenance</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-primary" id="addRefBtn" style="width:auto; margin-top:10px;">Ajouter</button>
-      `;
     } else {
       tabContentHTML = `
         ${tableFor("typesOperationT", [{key:"nom",label:"Opération"},{key:"tempsFixe",label:"Temps fixe (min)"},{key:"tempsVariable",label:"Temps variable (min/unité)"},{key:"unite",label:"Unité"}])}
@@ -5946,13 +5925,12 @@ const CALCUL_TEMPLATES = {
     content.innerHTML = `
       <button class="back-link" id="backBtn">&larr; Retour à l'agenda</button>
       <div class="menu-intro" style="margin-top:16px;">
-        <h1>Référentiels — Transport</h1>
-        <p>Définissez les transporteurs, le personnel, la flotte de véhicules et les types d'opération utilisés pour créer des créneaux.</p>
+        <h1>Référentiels — Agenda</h1>
+        <p>Définissez les transporteurs, le personnel et les types d'opération utilisés pour créer des créneaux. La flotte de véhicules se gère dans le module « Flotte ».</p>
       </div>
       <div class="doc-tabs no-print">
         <button class="doc-tab ${tab === "transporteurs" ? "active" : ""}" id="tabTransporteurs">Transporteurs</button>
         <button class="doc-tab ${tab === "personnel" ? "active" : ""}" id="tabPersonnel">Personnel</button>
-        <button class="doc-tab ${tab === "camions" ? "active" : ""}" id="tabCamions">Flotte de camions</button>
         <button class="doc-tab ${tab === "types" ? "active" : ""}" id="tabTypes">Types d'opération</button>
       </div>
       <div class="panel" style="margin-top:0;">
@@ -5962,7 +5940,6 @@ const CALCUL_TEMPLATES = {
     document.getElementById("backBtn").addEventListener("click", () => { state.transportView = "agenda"; render(); });
     document.getElementById("tabTransporteurs").addEventListener("click", () => { state.transportRefTab = "transporteurs"; render(); });
     document.getElementById("tabPersonnel").addEventListener("click", () => { state.transportRefTab = "personnel"; render(); });
-    document.getElementById("tabCamions").addEventListener("click", () => { state.transportRefTab = "camions"; render(); });
     document.getElementById("tabTypes").addEventListener("click", () => { state.transportRefTab = "types"; render(); });
 
     content.querySelectorAll(".ref-delete-btn").forEach(btn => {
@@ -5977,44 +5954,145 @@ const CALCUL_TEMPLATES = {
     });
 
     document.getElementById("addRefBtn").addEventListener("click", async () => {
+      const nom = document.getElementById("refNom").value.trim();
+      if(!nom){ showToast("Le nom est obligatoire."); return; }
       let item, dbKey, stateKey;
-      if(tab === "camions"){
-        const immat = document.getElementById("refImmat").value.trim();
-        if(!immat){ showToast("L'immatriculation est obligatoire."); return; }
-        const ptac = parseFloat(document.getElementById("refPtac").value);
-        const chargeUtile = parseFloat(document.getElementById("refChargeUtile").value);
-        const volumeUtile = parseFloat(document.getElementById("refVolumeUtile").value);
-        if(isNaN(ptac) || isNaN(chargeUtile) || isNaN(volumeUtile)){ showToast("PTAC, charge utile et volume doivent être des nombres."); return; }
-        item = {
-          id: uid(), immat,
-          marque: document.getElementById("refMarque").value.trim(),
-          modele: document.getElementById("refModele").value.trim(),
-          typeVehicule: document.getElementById("refTypeVehicule").value,
-          ptac, chargeUtile, volumeUtile,
-          statut: document.getElementById("refStatut").value
-        };
-        dbKey = "camionsT"; stateKey = "camionsT";
+      if(tab === "transporteurs"){
+        item = { id: uid(), nom, dispoDebut: document.getElementById("refDebut").value, dispoFin: document.getElementById("refFin").value };
+        dbKey = "transporteursT"; stateKey = "transporteursT";
+      } else if(tab === "personnel"){
+        item = { id: uid(), nom, dispoDebut: document.getElementById("refDebut").value, dispoFin: document.getElementById("refFin").value };
+        dbKey = "personnelT"; stateKey = "personnelT";
       } else {
-        const nom = document.getElementById("refNom").value.trim();
-        if(!nom){ showToast("Le nom est obligatoire."); return; }
-        if(tab === "transporteurs"){
-          item = { id: uid(), nom, dispoDebut: document.getElementById("refDebut").value, dispoFin: document.getElementById("refFin").value };
-          dbKey = "transporteursT"; stateKey = "transporteursT";
-        } else if(tab === "personnel"){
-          item = { id: uid(), nom, dispoDebut: document.getElementById("refDebut").value, dispoFin: document.getElementById("refFin").value };
-          dbKey = "personnelT"; stateKey = "personnelT";
-        } else {
-          const fixe = parseFloat(document.getElementById("refFixe").value);
-          const variable = parseFloat(document.getElementById("refVariable").value);
-          const unite = document.getElementById("refUnite").value.trim() || "unité";
-          if(isNaN(fixe) || isNaN(variable)){ showToast("Temps fixe et variable doivent être des nombres."); return; }
-          item = { id: uid(), nom, tempsFixe: fixe, tempsVariable: variable, unite };
-          dbKey = "typesOperationT"; stateKey = "typesOperationT";
-        }
+        const fixe = parseFloat(document.getElementById("refFixe").value);
+        const variable = parseFloat(document.getElementById("refVariable").value);
+        const unite = document.getElementById("refUnite").value.trim() || "unité";
+        if(isNaN(fixe) || isNaN(variable)){ showToast("Temps fixe et variable doivent être des nombres."); return; }
+        item = { id: uid(), nom, tempsFixe: fixe, tempsVariable: variable, unite };
+        dbKey = "typesOperationT"; stateKey = "typesOperationT";
       }
       state.moduleData[stateKey].push(item);
       await fbPutItem(dbRefGroupe(dbKey), item);
       showToast("Ajouté.");
+      render();
+    });
+  }
+
+  /* ============ RENDER : MODULE FLOTTE (véhicules) ============ */
+  function renderModuleFlotte(content){
+    const isTeacher = state.currentUser.role === "enseignant";
+    const camions = state.moduleData.camionsT;
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      ${isTeacher ? `<button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>` : ""}
+      <div class="menu-intro" style="margin-top:16px;">
+        <h1>Flotte de véhicules</h1>
+        <p>Fiche véhicule du groupe ${state.activeGroupe} : immatriculation, marque/modèle, type, PTAC, charge utile, volume utile et statut.</p>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr>
+            <th>Immatriculation</th><th>Marque</th><th>Modèle</th><th>Type</th>
+            <th>PTAC (kg)</th><th>Charge utile (kg)</th><th>Volume utile (m³)</th><th>Statut</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${camions.map(c => `
+              <tr>
+                <td><span class="ref-tag">${c.immat}</span></td>
+                <td>${c.marque}</td>
+                <td>${c.modele}</td>
+                <td>${c.typeVehicule}</td>
+                <td>${c.ptac}</td>
+                <td>${c.chargeUtile}</td>
+                <td>${c.volumeUtile}</td>
+                <td>
+                  <select class="camion-statut-select" data-id="${c.id}">
+                    <option ${c.statut==="Disponible"?"selected":""}>Disponible</option>
+                    <option ${c.statut==="En tournée"?"selected":""}>En tournée</option>
+                    <option ${c.statut==="En maintenance"?"selected":""}>En maintenance</option>
+                  </select>
+                </td>
+                <td><button class="btn-danger camion-delete-btn" data-id="${c.id}" style="padding:4px 10px; font-size:12px;">Supprimer</button></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+
+        <h2 style="margin-top:24px;">Ajouter un véhicule</h2>
+        <div class="admin-form-row">
+          <div><label for="fImmat">Immatriculation</label><input id="fImmat" type="text" data-mono="true" placeholder="ex : GD-004-LOG" /></div>
+          <div><label for="fMarque">Marque</label><input id="fMarque" type="text" placeholder="ex : Renault" /></div>
+          <div><label for="fModele">Modèle</label><input id="fModele" type="text" placeholder="ex : Master" /></div>
+          <div><label for="fTypeVehicule">Type de véhicule</label>
+            <select id="fTypeVehicule">
+              <option>Camionnette</option><option>Fourgon</option><option>Porteur</option><option>Semi-remorque</option>
+            </select>
+          </div>
+        </div>
+        <div class="admin-form-row" style="margin-top:12px;">
+          <div><label for="fPtac">PTAC (kg)</label><input id="fPtac" type="number" min="0" value="3500" /></div>
+          <div><label for="fChargeUtile">Charge utile (kg)</label><input id="fChargeUtile" type="number" min="0" value="1400" /></div>
+          <div><label for="fVolumeUtile">Volume utile (m³)</label><input id="fVolumeUtile" type="number" min="0" step="0.5" value="12" /></div>
+          <div><label for="fStatut">Statut</label>
+            <select id="fStatut">
+              <option>Disponible</option><option>En tournée</option><option>En maintenance</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="addCamionBtn" style="width:auto; margin-top:10px;">Ajouter le véhicule</button>
+      </div>
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    const changeGroupeBtn = document.getElementById("changeGroupeBtn");
+    if(changeGroupeBtn){
+      changeGroupeBtn.addEventListener("click", () => {
+        state.pendingModule = "transportFlotte";
+        state.view = "groupe-select";
+        render();
+      });
+    }
+
+    content.querySelectorAll(".camion-statut-select").forEach(sel => {
+      sel.addEventListener("change", async () => {
+        const camion = camions.find(c => c.id === sel.dataset.id);
+        if(!camion) return;
+        camion.statut = sel.value;
+        await fbPutItem(dbRefGroupe("camionsT"), camion);
+        showToast(`Statut mis à jour : ${camion.immat} — ${camion.statut}.`);
+        render();
+      });
+    });
+
+    content.querySelectorAll(".camion-delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if(!confirm("Supprimer ce véhicule ? Les créneaux qui l'utilisent déjà ne seront pas supprimés.")) return;
+        const ok = await fbRemoveItem(dbRefGroupe("camionsT"), btn.dataset.id);
+        if(!ok) return;
+        state.moduleData.camionsT = state.moduleData.camionsT.filter(c => c.id !== btn.dataset.id);
+        render();
+      });
+    });
+
+    document.getElementById("addCamionBtn").addEventListener("click", async () => {
+      const immat = document.getElementById("fImmat").value.trim();
+      if(!immat){ showToast("L'immatriculation est obligatoire."); return; }
+      const ptac = parseFloat(document.getElementById("fPtac").value);
+      const chargeUtile = parseFloat(document.getElementById("fChargeUtile").value);
+      const volumeUtile = parseFloat(document.getElementById("fVolumeUtile").value);
+      if(isNaN(ptac) || isNaN(chargeUtile) || isNaN(volumeUtile)){ showToast("PTAC, charge utile et volume doivent être des nombres."); return; }
+      const item = {
+        id: uid(), immat,
+        marque: document.getElementById("fMarque").value.trim(),
+        modele: document.getElementById("fModele").value.trim(),
+        typeVehicule: document.getElementById("fTypeVehicule").value,
+        ptac, chargeUtile, volumeUtile,
+        statut: document.getElementById("fStatut").value
+      };
+      state.moduleData.camionsT.push(item);
+      await fbPutItem(dbRefGroupe("camionsT"), item);
+      showToast("Véhicule ajouté.");
       render();
     });
   }
