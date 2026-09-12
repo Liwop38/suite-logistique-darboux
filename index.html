@@ -679,11 +679,13 @@
     { id: "pole2", code: "M-07", title: "Pôle 2 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C2.1 à C2.6).", ready: true, category: "cours" },
     { id: "pole3", code: "M-08", title: "Pôle 3 — Compétences", desc: "Exercices Excel notés par compétence du référentiel (C3.1 à C3.4).", ready: true, category: "cours" },
     { id: "brasserie", code: "M-09", title: "Étude de cas — Brasseries du Gâtinais", desc: "Palettisation, mise en stock et adressage — exercice complet noté.", ready: true, category: "etude-de-cas" },
-    { id: "calcul", code: "M-10", title: "Calcul", desc: "Proportionnalité, conversions, arrondis — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
-    { id: "geo", code: "M-11", title: "Géo", desc: "Capitales, régions et repères utiles en logistique — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
-    { id: "francais", code: "M-12", title: "Français", desc: "Accords, conjugaison, homophones — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
-    { id: "transportAgenda", code: "M-13", title: "Agenda", desc: "Créneaux, temps fixe/variable, disponibilités personnel et transporteurs.", ready: true, category: "transport" },
-    { id: "transportFlotte", code: "M-14", title: "Flotte", desc: "Fiches véhicules : immatriculation, PTAC, charge utile, volume, statut.", ready: true, category: "transport" }
+    { id: "yvesrocher", code: "M-10", title: "Étude de cas — Yves Rocher", desc: "Contrôle des stocks — exercice complet noté.", ready: true, category: "etude-de-cas" },
+    { id: "calcul", code: "M-11", title: "Calcul", desc: "Proportionnalité, conversions, arrondis — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
+    { id: "geo", code: "M-12", title: "Géo", desc: "Capitales, régions et repères utiles en logistique — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
+    { id: "francais", code: "M-13", title: "Français", desc: "Accords, conjugaison, homophones — 3 quiz de 20 questions.", ready: true, category: "entrainement" },
+    { id: "caces", code: "M-14", title: "CACES 1-3-5", desc: "Réglementation R489, catégories, stabilité et sécurité — 1 quiz de 20 questions.", ready: true, category: "entrainement" },
+    { id: "transportAgenda", code: "M-15", title: "Agenda", desc: "Créneaux, temps fixe/variable, disponibilités personnel et transporteurs.", ready: true, category: "transport" },
+    { id: "transportFlotte", code: "M-16", title: "Flotte", desc: "Fiches véhicules : immatriculation, PTAC, charge utile, volume, statut.", ready: true, category: "transport" }
   ];
 
 /* ===== Utilitaires ===== */
@@ -1727,6 +1729,41 @@ const CALCUL_TEMPLATES = {
         { q: "« ___ frère est plus âgé qu'elle. »", options: ["Son", "Sont", "Ce", "Se"], correct: 0, explication: "On peut dire « mon frère » : c'est le déterminant possessif « Son »." }
       ]
     }
+  ],
+  caces: [
+    {
+      id: "caces-1-3-5",
+      titre: "CACES R489 — Catégories 1, 3, 5",
+      description: "Réglementation, catégories, stabilité et règles de sécurité pour les chariots de manutention.",
+      rappel: [
+        "Le CACES (Certificat d'Aptitude à la Conduite En Sécurité) atteste d'une compétence : ce n'est pas un permis de conduire. C'est l'employeur qui délivre ensuite l'autorisation de conduite.",
+        "Depuis le 1er janvier 2020, la recommandation R489 encadre les chariots de manutention à conducteur porté (elle a remplacé la R389). Le CACES R489 est valable 5 ans.",
+        "Catégorie 1 : transpalettes et gerbeurs à conducteur porté. Catégorie 3 : chariots élévateurs frontaux en porte-à-faux. Catégorie 5 : chariots élévateurs à mât rétractable (allées étroites, stockage en hauteur).",
+        "Plus une charge est haute ou éloignée du centre de gravité du chariot, moins celui-ci est stable : c'est la base de toutes les règles de sécurité qui suivent."
+      ],
+      questions: [
+        { q: "Que signifie le sigle CACES ?", options: ["Certificat d'Aptitude à la Conduite En Sécurité", "Certificat d'Autorisation de Conduite d'Engins Spéciaux", "Contrôle Annuel des Chariots Élévateurs et Sécurité", "Certification d'Accès à la Conduite d'Engins Spécialisés"], correct: 0, explication: "CACES signifie Certificat d'Aptitude à la Conduite En Sécurité." },
+        { q: "Quelle recommandation encadre aujourd'hui la conduite des chariots de manutention à conducteur porté ?", options: ["R389", "R482", "R486", "R489"], correct: 3, explication: "La recommandation R489 encadre ces chariots depuis le 1er janvier 2020, remplaçant la R389." },
+        { q: "Le CACES atteste :", options: ["D'un permis de conduire valable sur route", "D'une compétence à conduire en sécurité, mais n'est pas un permis", "D'une autorisation légale délivrée par l'État", "D'une assurance obligatoire pour l'entreprise"], correct: 1, explication: "Le CACES valide une compétence ; ce n'est pas un permis de conduire." },
+        { q: "Qui délivre l'autorisation de conduire un chariot au sein d'une entreprise ?", options: ["L'organisme de formation", "L'employeur", "La CARSAT", "Le testeur CACES"], correct: 1, explication: "L'autorisation de conduite est délivrée par l'employeur, en s'appuyant notamment sur le CACES." },
+        { q: "Quelle est la durée de validité du CACES R489 ?", options: ["2 ans", "3 ans", "5 ans", "10 ans"], correct: 2, explication: "Le CACES R489 est valable 5 ans, après quoi un recyclage est nécessaire." },
+        { q: "Quel est l'âge minimum, en principe, pour conduire un chariot de manutention en entreprise ?", options: ["16 ans", "18 ans", "21 ans", "25 ans"], correct: 1, explication: "L'âge minimum requis est de 18 ans." },
+        { q: "Le CACES catégorie 1 concerne :", options: ["Les chariots élévateurs à mât rétractable", "Les transpalettes et gerbeurs à conducteur porté", "Les chariots élévateurs frontaux de plus de 6 tonnes", "Les chariots bi/tridirectionnels"], correct: 1, explication: "La catégorie 1 regroupe les transpalettes et gerbeurs à conducteur porté." },
+        { q: "Le CACES catégorie 3 concerne :", options: ["Les transpalettes à conducteur porté", "Les chariots élévateurs frontaux en porte-à-faux", "Les chariots à mât rétractable", "La conduite hors production"], correct: 1, explication: "La catégorie 3 regroupe les chariots élévateurs frontaux en porte-à-faux." },
+        { q: "Le CACES catégorie 5 concerne :", options: ["Les chariots élévateurs à mât rétractable", "Les transpalettes à conducteur porté", "Les chariots tracteurs", "Les gerbeurs à conducteur accompagnant"], correct: 0, explication: "La catégorie 5 regroupe les chariots élévateurs à mât rétractable." },
+        { q: "Les chariots de catégorie 5 sont particulièrement adaptés à :", options: ["La circulation sur route ouverte", "Le stockage en allées étroites et en hauteur", "Le transport de personnes", "Le remorquage de charges lourdes au sol"], correct: 1, explication: "Leur mât rétractable les rend adaptés aux allées étroites et au stockage en hauteur." },
+        { q: "Avant de prendre son poste, un cariste doit :", options: ["Démarrer directement pour ne pas perdre de temps", "Vérifier l'état général du chariot (fourches, pneus, fuites, avertisseur...)", "Attendre les instructions d'un collègue", "Vérifier uniquement le niveau de carburant"], correct: 1, explication: "Un contrôle visuel et fonctionnel complet est obligatoire avant chaque prise de poste." },
+        { q: "Si un cariste constate une anomalie sur son chariot avant la prise de poste, il doit :", options: ["L'utiliser prudemment quand même", "La signaler et ne pas utiliser le chariot tant qu'elle n'est pas résolue", "La réparer lui-même immédiatement", "Continuer et la signaler en fin de journée"], correct: 1, explication: "Toute anomalie doit être signalée immédiatement, et le chariot ne doit pas être utilisé tant qu'elle n'est pas résolue." },
+        { q: "La plaque de charge d'un chariot indique :", options: ["La date du dernier contrôle technique", "La capacité maximale de charge selon la hauteur et la distance du centre de gravité", "Le nom du constructeur uniquement", "La vitesse maximale autorisée"], correct: 1, explication: "La plaque de charge indique la capacité maximale admissible en fonction de la hauteur de levée et de la position du centre de gravité de la charge." },
+        { q: "Plus une charge est éloignée du tablier porte-fourche (centre de gravité éloigné), plus :", options: ["La capacité de charge admissible augmente", "La capacité de charge admissible diminue", "La stabilité du chariot augmente", "Cela n'a aucun effet sur la stabilité"], correct: 1, explication: "Un centre de gravité éloigné réduit la capacité de charge admissible et la stabilité du chariot." },
+        { q: "Lever le mât en hauteur a pour effet de :", options: ["Améliorer la stabilité du chariot", "Réduire la stabilité du chariot, notamment latérale", "Ne changer que la vitesse de déplacement", "Augmenter automatiquement la capacité de charge"], correct: 1, explication: "Plus le mât est haut, plus le centre de gravité de l'ensemble est élevé, ce qui réduit la stabilité, en particulier latérale." },
+        { q: "Lors d'un déplacement, à vide ou en charge, les fourches doivent être maintenues :", options: ["Le plus haut possible pour mieux voir", "Au plus près du sol (quelques centimètres)", "À hauteur des yeux du cariste", "Peu importe la hauteur"], correct: 1, explication: "Les fourches doivent rester au plus près du sol pendant les déplacements, pour la stabilité et la visibilité." },
+        { q: "Si la charge transportée masque la visibilité vers l'avant, le cariste doit :", options: ["Continuer normalement en accélérant", "Rouler en marche arrière ou se faire guider", "Klaxonner en continu sans changer de conduite", "Lever davantage la charge pour voir en dessous"], correct: 1, explication: "En cas de visibilité masquée, il faut circuler en marche arrière ou se faire guider par une autre personne." },
+        { q: "Que doit faire un cariste en fin de poste avant de quitter son chariot ?", options: ["Laisser les fourches en hauteur pour le prochain utilisateur", "Abaisser les fourches au sol, couper le contact et serrer le frein", "Laisser le moteur tourner pour le collègue suivant", "Garer le chariot n'importe où dans l'entrepôt"], correct: 1, explication: "En fin de poste, il faut abaisser les fourches au sol, couper le contact, serrer le frein et stationner à un emplacement autorisé." },
+        { q: "Circuler ou stationner sous une charge levée est :", options: ["Autorisé si la charge est légère", "Autorisé uniquement pour le cariste", "Interdit en toutes circonstances", "Autorisé en cas d'urgence"], correct: 2, explication: "Il est strictement interdit de circuler ou de stationner sous une charge levée, sans aucune exception." },
+        { q: "Un chariot de manutention ne doit jamais être utilisé pour :", options: ["Prélever une palette en rayonnage", "Transporter des personnes, sauf dispositif prévu à cet effet", "Charger un camion", "Déplacer une charge palettisée"], correct: 1, explication: "Le transport de personnes est interdit, sauf si le chariot est équipé d'un dispositif spécifiquement prévu et homologué à cet effet." }
+      ]
+    }
   ]
 };
 
@@ -2040,6 +2077,8 @@ const CALCUL_TEMPLATES = {
     pole3AllNotes: {},
     brasserieNotes: null,
     brasserieAllNotes: {},
+    yvesRocherNotes: null,
+    yvesRocherAllNotes: {},
     pole1Notes: {},
     pole1AllNotes: {},
     pole2Notes: {},
@@ -3034,6 +3073,20 @@ const CALCUL_TEMPLATES = {
     }catch(e){ state.brasserieAllNotes = {}; }
   }
 
+  async function loadYvesRocherNotes(){
+    try{
+      const snap = await dbRefGroupe(`yvesRocherNotes/${state.currentUser.matricule}`).get();
+      state.yvesRocherNotes = snap.val() || null;
+    }catch(e){ state.yvesRocherNotes = null; }
+  }
+
+  async function loadAllYvesRocherNotes(){
+    try{
+      const snap = await dbRefGroupe("yvesRocherNotes").get();
+      state.yvesRocherAllNotes = snap.val() || {};
+    }catch(e){ state.yvesRocherAllNotes = {}; }
+  }
+
   async function saveBrasserieNote(result){
     const record = { note: result.note, correct: result.correct, total: result.total, date: Date.now() };
     state.brasserieNotes = record;
@@ -3688,6 +3741,13 @@ const CALCUL_TEMPLATES = {
         await loadBrasserieNotes();
       }
     }
+    if(moduleId === "yvesrocher"){
+      if(state.currentUser.role === "enseignant"){
+        await loadAllYvesRocherNotes();
+      } else {
+        await loadYvesRocherNotes();
+      }
+    }
     if(moduleId === "pole1"){
       if(state.currentUser.role === "enseignant"){
         await loadAllPole1Notes();
@@ -3702,7 +3762,7 @@ const CALCUL_TEMPLATES = {
         await loadPole2Notes();
       }
     }
-    if(moduleId === "calcul" || moduleId === "geo" || moduleId === "francais"){
+    if(moduleId === "calcul" || moduleId === "geo" || moduleId === "francais" || moduleId === "caces"){
       state.entrainementView = "list";
       state.activeQuizMatiere = moduleId;
       state.activeQuizId = null;
@@ -4314,11 +4374,13 @@ const CALCUL_TEMPLATES = {
     else if(state.activeModule === "excel") renderModuleExcel(content);
     else if(state.activeModule === "pole3") renderModulePole3(content);
     else if(state.activeModule === "brasserie") renderModuleBrasserie(content);
+    else if(state.activeModule === "yvesrocher") renderModuleYvesRocher(content);
     else if(state.activeModule === "pole1") renderModulePole1(content);
     else if(state.activeModule === "pole2") renderModulePole2(content);
     else if(state.activeModule === "calcul") renderModuleEntrainement(content, "calcul");
     else if(state.activeModule === "geo") renderModuleEntrainement(content, "geo");
     else if(state.activeModule === "francais") renderModuleEntrainement(content, "francais");
+    else if(state.activeModule === "caces") renderModuleEntrainement(content, "caces");
   }
 
   /* ============ RENDER : MODULE MAGASIN ============ */
@@ -6526,7 +6588,8 @@ const CALCUL_TEMPLATES = {
   function renderQuizList(content, matiere){
     const isTeacher = state.currentUser.role === "enseignant";
     const quizzes = QUIZZES[matiere] || [];
-    const matiereLabel = matiere === "calcul" ? "Calcul" : (matiere === "geo" ? "Géo" : "Français");
+    const MATIERE_LABELS = { calcul: "Calcul", geo: "Géo", francais: "Français", caces: "CACES 1-3-5" };
+    const matiereLabel = MATIERE_LABELS[matiere] || matiere;
 
     const tilesHTML = quizzes.map(quiz => {
       const scoreRec = !isTeacher ? state.entrainementScores[quiz.id] : null;
@@ -6780,6 +6843,95 @@ const CALCUL_TEMPLATES = {
         state.brasserieAllNotes[matricule] = record;
         try{
           await dbRefGroupeExplicit(state.activeGroupe, `brasserieNotes/${matricule}`).set(record);
+          showToast(`Note enregistrée pour ${btn.dataset.nom}.`);
+        }catch(e){
+          showToast("Échec de l'enregistrement de la note.");
+        }
+      });
+    });
+  }
+
+  /* ============ RENDER : MODULE YVES ROCHER (étude de cas) ============ */
+  const YVES_ROCHER_PADLET_URL = "https://padlet.com/morintristan1/scenario-yves-rocher-dhw8plzoaanxoo05";
+
+  function renderModuleYvesRocher(content){
+    const isTeacher = state.currentUser.role === "enseignant";
+    const noteRecord = !isTeacher ? state.yvesRocherNotes : null;
+
+    let classTrackingHTML = "";
+    if(isTeacher){
+      const students = state.users.filter(u => u.role === "eleve" && u.groupe === state.activeGroupe);
+      classTrackingHTML = `
+        <div class="panel" style="margin-top:18px;">
+          <h2>Suivi de la classe — groupe ${state.activeGroupe}</h2>
+          <p class="hint" style="margin-bottom:12px;">L'activité se fait sur le Padlet, sans correction automatique : saisissez ici la note de chaque élève.</p>
+          ${students.length === 0 ? `<div class="empty-state">Aucun élève dans ce groupe.</div>` : `
+            <table>
+              <thead><tr><th>Élève</th><th>Note /20</th><th></th></tr></thead>
+              <tbody>
+                ${students.map(st => {
+                  const n = state.yvesRocherAllNotes[st.matricule];
+                  return `<tr>
+                    <td>${st.nom}</td>
+                    <td style="text-align:center;"><input type="number" min="0" max="20" step="0.5" class="yvesrocher-note-input" data-matricule="${st.matricule}" value="${n ? n.note : ""}" style="width:70px; text-align:center;" /></td>
+                    <td><button class="btn-ghost yvesrocher-save-note-btn" data-matricule="${st.matricule}" data-nom="${st.nom}" style="padding:4px 10px; font-size:12px;">Enregistrer</button></td>
+                  </tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          `}
+        </div>
+      `;
+    }
+
+    content.innerHTML = `
+      <button class="back-link" id="backBtn">&larr; Retour au menu</button>
+      ${isTeacher ? `<button class="back-link" id="changeGroupeBtn" style="margin-left:16px;">Changer de groupe (${state.activeGroupe})</button>` : ""}
+      <div class="menu-intro" style="margin-top:16px;">
+        <h1>Étude de cas — Yves Rocher</h1>
+        <p>Contrôle des stocks. ${isTeacher ? `Saisissez la note de chaque élève ci-dessous.` : "L'activité se fait directement sur le Padlet ci-dessous."}</p>
+      </div>
+      <div class="excel-step ${noteRecord ? "done" : ""}">
+        <div class="excel-step-num">${noteRecord ? "✓" : "🌿"}</div>
+        <div class="excel-step-body">
+          <div class="excel-step-title">Scénario complet</div>
+          <div class="excel-step-objectif">Étude de cas sur le contrôle des stocks dans l'univers Yves Rocher.</div>
+          ${noteRecord ? `<div class="excel-note-badge">Note : ${noteRecord.note}/20</div>` : ""}
+        </div>
+        <div class="excel-step-actions">
+          <button class="btn-ghost" id="yvesRocherPadletBtn">Ouvrir le Padlet</button>
+        </div>
+      </div>
+      ${classTrackingHTML}
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => { state.view = "menu"; render(); });
+    const changeGroupeBtn = document.getElementById("changeGroupeBtn");
+    if(changeGroupeBtn){
+      changeGroupeBtn.addEventListener("click", () => {
+        state.pendingModule = "yvesrocher";
+        state.view = "groupe-select";
+        render();
+      });
+    }
+
+    document.getElementById("yvesRocherPadletBtn").addEventListener("click", () => {
+      window.open(YVES_ROCHER_PADLET_URL, "_blank", "noopener");
+    });
+
+    content.querySelectorAll(".yvesrocher-save-note-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const matricule = btn.dataset.matricule;
+        const input = content.querySelector(`.yvesrocher-note-input[data-matricule="${matricule}"]`);
+        const note = parseFloat(input.value);
+        if(isNaN(note) || note < 0 || note > 20){
+          showToast("La note doit être un nombre entre 0 et 20.");
+          return;
+        }
+        const record = { note, date: Date.now() };
+        state.yvesRocherAllNotes[matricule] = record;
+        try{
+          await dbRefGroupeExplicit(state.activeGroupe, `yvesRocherNotes/${matricule}`).set(record);
           showToast(`Note enregistrée pour ${btn.dataset.nom}.`);
         }catch(e){
           showToast("Échec de l'enregistrement de la note.");
